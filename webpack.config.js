@@ -1,4 +1,5 @@
 const path = require('path');
+const babelConfig = require('./babel.config');
 
 module.exports = {
   mode: 'development',
@@ -11,7 +12,7 @@ module.exports = {
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'index.js'
+    filename: 'index.js',
   },
   module: {
     rules: [
@@ -20,11 +21,9 @@ module.exports = {
         exclude: /(node_modules|bower_components)/,
         use: {
           loader: 'babel-loader',
-          options: {
-            presets: ['@babel/preset-env']
-          }
-        }
-      }
-    ]
-  }
+          options: babelConfig,
+        },
+      },
+    ],
+  },
 };
