@@ -63,13 +63,12 @@ class ViewerImage {
   }
 
   drawOn(viewer) {
-    console.log('draw');
     viewer.clear();
     const size = [
       this.naturalWidth * this._scale,
       this.naturalHeight * this._scale,
     ];
-    viewer.drawImage(this._image, this._position, size);
+    viewer.drawImage(this._image, this.position, size);
   }
 }
 
@@ -91,30 +90,50 @@ class Viewer {
     this._zoom$ = zoomTrack(canvas);
     this._zoom$
       .subscribe(({ scale }) => {
-        console.log('S', scale);
-        if (this.selected) {
-          if (this.selected.isLoaded()) {
-            this.selected.setScale(scale);
-            this.drawSelected();
-          }
+        if (!this.selected) return;
+        if (this.selected.isLoaded() && scale !== this.selected.scale) {
+          this.selected.setScale(scale);
+          this.drawSelected();
         }
       });
     this._mouse$
       .subscribe(({ currPosition, lastPosition }) => {
+        if (!this.selected) return;
         const delta = subArrays(currPosition, lastPosition);
         const bounds = this._getBounds(this.selected.scale);
         const getTranslation = translateOn(bounds);
         const position = getTranslation(this.selected.position, delta);
-        console.log('T', position);
-        if (this.selected && this.selected.isLoaded()) {
-          this.selected.setPosition(...position);
+        if (this.selected.isLoaded()) {
+          this.selected.setPosition(position);
           this.drawSelected();
         }
       });
+
+    // eslint-disable-next-line
+    const hammer = canvas._hammer || new Hammer(canvas);
+    hammer.on('swipeleft', () => this.prev());
+    hammer.on('swiperight', () => this.next());
+    // eslint-disable-next-line
+    canvas._hammer = hammer;
+
+    fromEvent(canvas, 'keypress')
+      .subscribe((e) => {
+        if (e.which === 39) {
+          this.next();
+        }
+        else if (e.which === 37) {
+          this.prev();
+        }
+      });
+
+    fromEvent(canvas, 'resize')
+      .subscribe(() => this.restore());
+    fromEvent(window, 'resize')
+      .subscribe(() => this.restore());
   }
 
   _getBounds(scale) {
-    if (this.selected) return undefined;
+    if (!this.selected) return undefined;
     const minX = -(this.selected.naturalWidth * scale) + this._canvas.width;
     const minY = -(this.selected.naturalHeight * scale) + this._canvas.height;
     const maxX = 0 * scale;
@@ -148,11 +167,11 @@ class Viewer {
   _loadImage(index) {
     if (index < 0 || index >= this.length) return;
     const item = this._items[index];
-    console.log('SDSDSDS');
     item.load()
       .subscribe(() => {
         if (index === this.current) {
           this._zoom$.next({ scale: this.selected.scale });
+          this.drawSelected();
         }
         this._loadImage(index + 1);
       });
@@ -172,17 +191,17 @@ class Viewer {
     return this;
   }
 
-  removeImage(index) {
+  /* removeImage(index) {
     this._items.splice(index, 1);
     return this;
-  }
+  } */
 
   select(index) {
     if (index !== this.current) {
       const item = this._items[index];
+      this._current = index;
       item.reset();
       this._zoom$.next({ scale: item.scale });
-      this._current = index;
       this.drawSelected();
     }
     return this;
@@ -204,7 +223,7 @@ class Viewer {
     return this;
   }
 
-  zoomIn(delta) {
+  /* zoomIn(delta) {
     if (this.selected) {
       this.selected.zoomIn(delta);
     }
@@ -216,21 +235,24 @@ class Viewer {
       this.selected.zoomOut(delta);
     }
     return this;
-  }
+  } */
 
   restore() {
     if (this.selected) {
       this.selected.reset();
+      this._zoom$.next({ scale: this.selected.scale });
+      this.drawSelected();
     }
     return this;
   }
 
-  moveTo(x, y) {
+  /* moveTo(x, y) {
     if (this.selected) {
       this.selected.moveTo(x, y);
+      this.drawSelected();
     }
     return this;
-  }
+  } */
 }
 
 /* eslint-disable no-param-reassign */

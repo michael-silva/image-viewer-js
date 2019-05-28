@@ -1,3 +1,4 @@
+import Hammer from 'hammerjs';
 import { fromEvent, of } from './observable';
 
 export const stepZoom = (scale) => {
@@ -18,6 +19,20 @@ export const zoomTrack = (canvas) => {
     scale: 1,
   };
   const transform$ = of(transform);
+
+  // eslint-disable-next-line
+  const hammer = canvas._hammer || new Hammer(canvas);
+  hammer.on('doubletap', () => {
+    const scale = stepZoom(transform.scale);
+    transform$.next({ scale });
+  });
+  hammer.on('pinch', (e) => {
+    const delta = e.scale / 120;
+    const scale = freeZoom(transform.scale, delta);
+    transform$.next({ scale });
+  });
+  // eslint-disable-next-line
+  canvas._hammer = hammer;
 
   fromEvent(canvas, 'wheel')
     .subscribe((e) => {
