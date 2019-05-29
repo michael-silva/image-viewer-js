@@ -1,7 +1,7 @@
 import { fromEvent } from './observable';
 import { mouseTrack } from './mouse-track';
 import { zoomTrack } from './zoom-track';
-import { sumArrays, subArrays } from './utils';
+import { subArrays } from './utils';
 
 export const translateOn = (bounds) => (translate, delta) => {
   const {
@@ -11,7 +11,8 @@ export const translateOn = (bounds) => (translate, delta) => {
   const x = Math.max(minX, Math.min(maxX, translate[0] + delta[0]));
   const y = Math.max(minY, Math.min(maxY, translate[1] + delta[1]));
 
-  return sumArrays(translate, [x, y]);
+  return [x, y];
+  // return sumArrays(translate, [x, y]);
 };
 
 class ViewerImage {
@@ -72,7 +73,7 @@ class ViewerImage {
   }
 }
 
-class Viewer {
+export class Viewer {
   get items() { return this._items; }
 
   get length() { return this.items.length; }
@@ -254,11 +255,3 @@ class Viewer {
     return this;
   } */
 }
-
-/* eslint-disable no-param-reassign */
-export const setupViewer = (canvas, w, h) => {
-  canvas.width = w || window.innerWidth;
-  canvas.height = h || window.innerHeight;
-
-  return new Viewer(canvas);
-};

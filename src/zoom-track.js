@@ -26,6 +26,7 @@ export const zoomTrack = (canvas) => {
     const scale = stepZoom(transform.scale);
     transform$.next({ scale });
   });
+  hammer.get('pinch').set({ enable: true });
   hammer.on('pinch', (e) => {
     const delta = e.scale / 120;
     const scale = freeZoom(transform.scale, delta);
@@ -36,7 +37,7 @@ export const zoomTrack = (canvas) => {
 
   fromEvent(canvas, 'wheel')
     .subscribe((e) => {
-      const delta = e.delta / 120;
+      const delta = e.wheelDelta / 120;
       const scale = freeZoom(transform.scale, delta);
       transform$.next({ scale });
     });

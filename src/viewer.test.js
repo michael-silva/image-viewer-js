@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import { canvasMock, contextMock } from './test-utils';
-import { setupViewer } from './viewer';
+import { Viewer } from './viewer';
 
 afterEach(() => {
   contextMock.drawImage.mockReset();
@@ -9,7 +9,7 @@ afterEach(() => {
 
 test('viewer should add a single image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   viewer.addImage(src1);
   expect(viewer.items).toHaveLength(1);
@@ -17,7 +17,7 @@ test('viewer should add a single image', () => {
 
 test('viewer should add multiple images', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   const src3 = 'a3';
@@ -28,7 +28,7 @@ test('viewer should add multiple images', () => {
 
 test('viewer should start loading when add first image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   viewer.addImage(src1);
   expect(viewer.items[0].isLoading()).toBeTruthy();
@@ -42,7 +42,7 @@ test('viewer should start loading when add first image', () => {
 
 test('viewer should draw only the selected image after loading them in sequence', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -61,7 +61,7 @@ test('viewer should draw only the selected image after loading them in sequence'
 
 test('viewer should load image in sequence', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   const src3 = 'a3';
@@ -95,7 +95,7 @@ test('viewer should load image in sequence', () => {
 
 test('viewer should navigate between images', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   viewer.addImage('a1').addImage('a2');
   viewer.addImage('a3').addImage('a4');
   expect(viewer.items).toHaveLength(4);
@@ -120,7 +120,7 @@ test('viewer should navigate between images', () => {
 
 test('double click should zoomStep just the selected image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -140,7 +140,7 @@ test('double click should zoomStep just the selected image', () => {
 
 test('double tap should zoom Step just the selected image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -159,13 +159,13 @@ test('double tap should zoom Step just the selected image', () => {
 
 test('mouse wheel should zoom just the selected image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
   viewer.addImage(src2);
   viewer.select(1);
-  const e = { delta: 60 };
+  const e = { wheelDelta: 60 };
   cmock.dispatch('wheel', e);
   expect(viewer.selected.scale).toBe(1);
   viewer.items[0]._image.dispatchEvent(new Event('load'));
@@ -179,7 +179,7 @@ test('mouse wheel should zoom just the selected image', () => {
 
 test('pinch in and pinch out should zoom just the selected image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -198,7 +198,7 @@ test('pinch in and pinch out should zoom just the selected image', () => {
 
 test('swipe left and right should change to prev and next selected image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -218,7 +218,7 @@ test('swipe left and right should change to prev and next selected image', () =>
 
 test('key press arrow left and arrow right should change to prev and next selected image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -238,7 +238,9 @@ test('key press arrow left and arrow right should change to prev and next select
 
 test('drag and drop should just move the selected image', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  cmock.height = 10;
+  cmock.width = 10;
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -264,7 +266,9 @@ test('drag and drop should just move the selected image', () => {
 
 test('on resize just all the transformations are reseted', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  cmock.height = 10;
+  cmock.width = 10;
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -277,7 +281,7 @@ test('on resize just all the transformations are reseted', () => {
   cmock.dispatch('mousedown', { clientX: 30, clientY: 30 });
   cmock.dispatch('mousemove', { clientX: 40, clientY: 40 });
   cmock.dispatch('mouseup', { clientX: 40, clientY: 40 });
-  cmock.dispatch('wheel', { delta: 60 });
+  cmock.dispatch('wheel', { wheelDelta: 60 });
   expect(viewer.selected.position).toEqual([10, 10]);
   expect(viewer.selected.scale).toEqual(1.5);
   cmock.dispatch('resize', { });
@@ -288,7 +292,9 @@ test('on resize just all the transformations are reseted', () => {
 
 test('on navigate to next or prev just all the transformations are reseted', () => {
   const cmock = canvasMock();
-  const viewer = setupViewer(cmock, 10, 10);
+  cmock.height = 10;
+  cmock.width = 10;
+  const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -301,7 +307,7 @@ test('on navigate to next or prev just all the transformations are reseted', () 
   cmock.dispatch('mousedown', { clientX: 30, clientY: 30 });
   cmock.dispatch('mousemove', { clientX: 40, clientY: 40 });
   cmock.dispatch('mouseup', { clientX: 40, clientY: 40 });
-  cmock.dispatch('wheel', { delta: 60 });
+  cmock.dispatch('wheel', { wheelDelta: 60 });
   expect(viewer.selected.position).toEqual([10, 10]);
   expect(viewer.selected.scale).toEqual(1.5);
   viewer.next();

@@ -1,5 +1,7 @@
-import { setupViewer } from '../src/index';
+import TouchEmulator from 'hammer-touchemulator';
+import setupViewer from '../src/index';
 
+TouchEmulator();
 const canvas = document.getElementById('canvas');
 
 const viewer = setupViewer(canvas, 300, 300);
