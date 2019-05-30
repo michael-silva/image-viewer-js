@@ -3,6 +3,16 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "branches": 50,
+        "functions": 50,
+        "lines": 50,
+        "statements": 50
+      }
+    }
+  },
   "scripts": {
     "start": "webpack-dev-server --entry ./demo/index.js --open",
     "build": "webpack --prod",
