@@ -3,13 +3,23 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/index.js",
+  "jest": {
+    "coverageThreshold": {
+      "global": {
+        "branches": 50,
+        "functions": 50,
+        "lines": 50,
+        "statements": 50
+      }
+    }
+  },
   "scripts": {
     "start": "webpack-dev-server --entry ./demo/index.js --open",
     "build": "webpack --prod",
     "lint": "./node_modules/.bin/eslint src",
     "lint:fix": "npm run lint -- --fix",
     "test": "./node_modules/.bin/jest --watch",
-    "test:coverage": "./node_modules/.binjest --coverage"
+    "test:coverage": "./node_modules/.bin/jest --coverage"
   },
   "keywords": [],
   "author": "",
