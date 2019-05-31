@@ -1,18 +1,21 @@
 import { fromEvent } from './observable';
 import { mouseTrack } from './mouse-track';
-import { zoomTrack } from './zoom-track';
 import { subArrays } from './utils';
 
-export const translateOn = (bounds) => (translate, delta) => {
-  const {
-    minX, maxX, minY, maxY,
-  } = bounds;
+export const stepZoom = (scale, step = 1) => {
+  const steps = [1, 1.4, 1.8, 2];
+  const i = steps.findIndex((s) => s === scale);
+  if (i === -1) return steps[0];
+  const j = i + step;
+  if (j === -1) return steps[steps.length - 1];
+  if (j === steps.length) return steps[0];
+  return steps[j];
+};
 
-  const x = Math.max(minX, Math.min(maxX, translate[0] + delta[0]));
-  const y = Math.max(minY, Math.min(maxY, translate[1] + delta[1]));
-
-  return [x, y];
-  // return sumArrays(translate, [x, y]);
+export const freeZoom = (scale, delta) => {
+  const minScale = 1;
+  const maxScale = 2;
+  return Math.min(maxScale, Math.max(minScale, scale + delta));
 };
 
 class ViewerImage {
@@ -30,14 +33,6 @@ class ViewerImage {
     this.reset();
   }
 
-  setScale(scale) {
-    this._scale = scale;
-  }
-
-  setPosition(position) {
-    this._position = position;
-  }
-
   isLoaded() {
     return this._loaded;
   }
@@ -49,6 +44,25 @@ class ViewerImage {
   reset() {
     this._position = [0, 0];
     this._scale = 1;
+  }
+
+  zoomIn() {
+    const step = 1;
+    this._scale = stepZoom(this.scale, step);
+  }
+
+  zoomOut() {
+    const step = -1;
+    this._scale = stepZoom(this.scale, step);
+  }
+
+  zoom(delta) {
+    this._scale = freeZoom(this.scale, delta);
+  }
+
+  moveOn(viewer, delta) {
+    const bounds = this._getBoundsOn(viewer);
+    this._position = this._translateOn(bounds, delta);
   }
 
   load() {
@@ -71,6 +85,30 @@ class ViewerImage {
     ];
     viewer.drawImage(this._image, this.position, size);
   }
+
+  _translateOn(bounds, delta) {
+    const {
+      minX, maxX, minY, maxY,
+    } = bounds;
+
+    const x = Math.max(minX, Math.min(maxX, this.position[0] + delta[0]));
+    const y = Math.max(minY, Math.min(maxY, this.position[1] + delta[1]));
+
+    return [x, y];
+  }
+
+  _getBoundsOn(viewer) {
+    const minX = -(this.naturalWidth * this.scale) + viewer.width;
+    const minY = -(this.naturalHeight * this.scale) + viewer.height;
+    const maxX = 0 * this.scale;
+    const maxY = 0 * this.scale;
+    return {
+      minX,
+      maxX,
+      minY,
+      maxY,
+    };
+  }
 }
 
 export class Viewer {
@@ -82,40 +120,39 @@ export class Viewer {
 
   get selected() { return this.items[this.current]; }
 
+  get width() { return this._canvas.width; }
+
+  get height() { return this._canvas.height; }
+
   constructor(canvas) {
     this._canvas = canvas;
     this._items = [];
     this._current = null;
     this._ctx = canvas.getContext('2d');
     this._mouse$ = mouseTrack(canvas);
-    this._zoom$ = zoomTrack(canvas);
-    this._zoom$
-      .subscribe(({ scale }) => {
-        if (!this.selected) return;
-        if (this.selected.isLoaded() && scale !== this.selected.scale) {
-          this.selected.setScale(scale);
-          this.drawSelected();
-        }
-      });
-    this._mouse$
-      .subscribe(({ currPosition, lastPosition }) => {
-        if (!this.selected) return;
-        const delta = subArrays(currPosition, lastPosition);
-        const bounds = this._getBounds(this.selected.scale);
-        const getTranslation = translateOn(bounds);
-        const position = getTranslation(this.selected.position, delta);
-        if (this.selected.isLoaded()) {
-          this.selected.setPosition(position);
-          this.drawSelected();
-        }
+
+    fromEvent(canvas, 'wheel')
+      .subscribe((e) => {
+        if (!this.selected || !this.selected.isLoaded()) return;
+        const delta = e.wheelDelta / 120;
+        this.selected.zoom(delta);
+        this.selected.drawOn(this);
       });
 
-    // eslint-disable-next-line
-    const hammer = canvas._hammer || new Hammer(canvas);
-    hammer.on('swipeleft', () => this.prev());
-    hammer.on('swiperight', () => this.next());
-    // eslint-disable-next-line
-    canvas._hammer = hammer;
+    fromEvent(canvas, 'dblclick')
+      .subscribe(() => {
+        if (!this.selected || !this.selected.isLoaded()) return;
+        this.selected.zoomIn();
+        this.selected.drawOn(this);
+      });
+
+    this._mouse$
+      .subscribe(({ currPosition, lastPosition }) => {
+        if (!this.selected || !this.selected.isLoaded()) return;
+        const delta = subArrays(currPosition, lastPosition);
+        this.selected.moveOn(this, delta);
+        this.selected.drawOn(this);
+      });
 
     fromEvent(canvas, 'keypress')
       .subscribe((e) => {
@@ -133,32 +170,12 @@ export class Viewer {
       .subscribe(() => this.restore());
   }
 
-  _getBounds(scale) {
-    if (!this.selected) return undefined;
-    const minX = -(this.selected.naturalWidth * scale) + this._canvas.width;
-    const minY = -(this.selected.naturalHeight * scale) + this._canvas.height;
-    const maxX = 0 * scale;
-    const maxY = 0 * scale;
-    return {
-      minX,
-      maxX,
-      minY,
-      maxY,
-    };
-  }
-
   clear() {
     this._ctx.clearRect(0, 0, this._canvas.width, this._canvas.height);
   }
 
   drawImage(image, [x, y], [w, h]) {
     this._ctx.drawImage(image, x, y, w, h);
-  }
-
-  drawSelected() {
-    if (this.selected && this.selected.isLoaded()) {
-      this.selected.drawOn(this);
-    }
   }
 
   isAllLoaded() {
@@ -171,8 +188,7 @@ export class Viewer {
     item.load()
       .subscribe(() => {
         if (index === this.current) {
-          this._zoom$.next({ scale: this.selected.scale });
-          this.drawSelected();
+          this.restore();
         }
         this._loadImage(index + 1);
       });
@@ -199,11 +215,8 @@ export class Viewer {
 
   select(index) {
     if (index !== this.current) {
-      const item = this._items[index];
       this._current = index;
-      item.reset();
-      this._zoom$.next({ scale: item.scale });
-      this.drawSelected();
+      this.restore();
     }
     return this;
   }
@@ -224,34 +237,43 @@ export class Viewer {
     return this;
   }
 
-  /* zoomIn(delta) {
-    if (this.selected) {
+  zoomIn(delta) {
+    if (this.selected && this.selected.isLoaded()) {
       this.selected.zoomIn(delta);
+      this.selected.drawOn(this);
     }
     return this;
   }
 
   zoomOut(delta) {
-    if (this.selected) {
+    if (this.selected && this.selected.isLoaded()) {
       this.selected.zoomOut(delta);
-    }
-    return this;
-  } */
-
-  restore() {
-    if (this.selected) {
-      this.selected.reset();
-      this._zoom$.next({ scale: this.selected.scale });
-      this.drawSelected();
+      this.selected.drawOn(this);
     }
     return this;
   }
 
-  /* moveTo(x, y) {
-    if (this.selected) {
-      this.selected.moveTo(x, y);
-      this.drawSelected();
+  zoom(delta) {
+    if (this.selected && this.selected.isLoaded()) {
+      this.selected.zoom(delta);
+      this.selected.drawOn(this);
     }
     return this;
-  } */
+  }
+
+  restore() {
+    if (this.selected && this.selected.isLoaded()) {
+      this.selected.reset();
+      this.selected.drawOn(this);
+    }
+    return this;
+  }
+
+  moveTo(x, y) {
+    if (this.selected && this.selected.isLoaded()) {
+      this.selected.moveTo([x, y]);
+      this.selected.drawOn(this);
+    }
+    return this;
+  }
 }

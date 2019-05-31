@@ -1,6 +1,6 @@
 /* eslint-disable no-underscore-dangle */
 import { canvasMock, contextMock } from './test-utils';
-import { Viewer } from './viewer';
+import { Viewer, freeZoom, stepZoom } from './viewer';
 
 afterEach(() => {
   contextMock.drawImage.mockReset();
@@ -138,25 +138,6 @@ test('double click should zoomStep just the selected image', () => {
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });
 
-test('double tap should zoom Step just the selected image', () => {
-  const cmock = canvasMock();
-  const viewer = new Viewer(cmock);
-  const src1 = 'a1';
-  const src2 = 'a2';
-  viewer.addImage(src1);
-  viewer.addImage(src2);
-  viewer.select(1);
-  cmock._hammer.emit('doubletap', {});
-  expect(viewer.selected.scale).toBe(1);
-  viewer.items[0]._image.dispatchEvent(new Event('load'));
-  viewer.items[1]._image.dispatchEvent(new Event('load'));
-  cmock._hammer.emit('doubletap', {});
-  expect(viewer.items[0].scale).toBe(1);
-  expect(viewer.items[1].scale).toBe(1.4);
-  expect(viewer.selected.scale).toBe(1.4);
-  expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
-});
-
 test('mouse wheel should zoom just the selected image', () => {
   const cmock = canvasMock();
   const viewer = new Viewer(cmock);
@@ -174,45 +155,6 @@ test('mouse wheel should zoom just the selected image', () => {
   expect(viewer.items[0].scale).toBe(1);
   expect(viewer.items[1].scale).toBe(1.5);
   expect(viewer.selected.scale).toBe(1.5);
-  expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
-});
-
-test('pinch in and pinch out should zoom just the selected image', () => {
-  const cmock = canvasMock();
-  const viewer = new Viewer(cmock);
-  const src1 = 'a1';
-  const src2 = 'a2';
-  viewer.addImage(src1);
-  viewer.addImage(src2);
-  viewer.select(1);
-  cmock._hammer.emit('pinch', { scale: 60 });
-  expect(viewer.selected.scale).toBe(1);
-  viewer.items[0]._image.dispatchEvent(new Event('load'));
-  viewer.items[1]._image.dispatchEvent(new Event('load'));
-  cmock._hammer.emit('pinch', { scale: 60 });
-  expect(viewer.items[0].scale).toBe(1);
-  expect(viewer.items[1].scale).toBe(1.5);
-  expect(viewer.selected.scale).toBe(1.5);
-  expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
-});
-
-test('swipe left and right should change to prev and next selected image', () => {
-  const cmock = canvasMock();
-  const viewer = new Viewer(cmock);
-  const src1 = 'a1';
-  const src2 = 'a2';
-  viewer.addImage(src1);
-  viewer.addImage(src2);
-  viewer.items[0]._image.dispatchEvent(new Event('load'));
-  viewer.items[1]._image.dispatchEvent(new Event('load'));
-  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
-  expect(viewer.current).toBe(0);
-  cmock._hammer.emit('swipeleft', { });
-  expect(viewer.current).toBe(0);
-  cmock._hammer.emit('swiperight', { });
-  expect(viewer.current).toBe(1);
-  cmock._hammer.emit('swiperight', { });
-  expect(viewer.current).toBe(1);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });
 
@@ -317,4 +259,48 @@ test('on navigate to next or prev just all the transformations are reseted', () 
   expect(viewer.selected.position).toEqual([0, 0]);
   expect(viewer.selected.scale).toEqual(1);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(5);
+});
+
+
+test('stepZoom should increase based on steps', () => {
+  const expected1 = 1.4;
+  const expected2 = 1.8;
+  const result1 = stepZoom(1);
+  const result2 = stepZoom(result1);
+  expect(result1).toBe(expected1);
+  expect(result2).toBe(expected2);
+});
+
+test('stepZoom should go back for first step after max', () => {
+  const expected1 = 2;
+  const expected2 = 1;
+  const result1 = stepZoom(1.8);
+  const result2 = stepZoom(result1);
+  expect(result1).toBe(expected1);
+  expect(result2).toBe(expected2);
+});
+
+test('stepZoom should go to first step if the scale is custom', () => {
+  const expected = 1;
+  const result = stepZoom(1.3);
+
+  expect(result).toBe(expected);
+});
+
+test('freeZoom should scale for value passed', () => {
+  const expected1 = 1.3;
+  const expected2 = 1.7;
+  const result1 = freeZoom(1, 0.3);
+  const result2 = freeZoom(1, 0.7);
+  expect(result1).toBe(expected1);
+  expect(result2).toBe(expected2);
+});
+
+test('freeZoom should not pass the scale min and max', () => {
+  const expected1 = 1;
+  const expected2 = 2;
+  const result1 = freeZoom(1, -0.3);
+  const result2 = freeZoom(result1, 4);
+  expect(result1).toBe(expected1);
+  expect(result2).toBe(expected2);
 });
