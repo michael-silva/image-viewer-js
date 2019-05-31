@@ -1,5 +1,4 @@
-import { stepZoom, freeZoom } from './zoom-track';
-
+import { stepZoom, freeZoom } from './viewer-image';
 
 test('stepZoom should increase based on steps', () => {
   const expected1 = 1.4;
