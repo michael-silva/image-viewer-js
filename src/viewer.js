@@ -46,16 +46,6 @@ export class Viewer {
         this.selected.drawOn(this);
       });
 
-    fromEvent(canvas, 'keypress')
-      .subscribe((e) => {
-        if (e.which === 39) {
-          this.next();
-        }
-        else if (e.which === 37) {
-          this.prev();
-        }
-      });
-
     fromEvent(canvas, 'resize')
       .subscribe(() => this.restore());
     fromEvent(window, 'resize')

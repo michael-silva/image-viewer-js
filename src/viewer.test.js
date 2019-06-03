@@ -158,26 +158,6 @@ test('mouse wheel should zoom just the selected image', () => {
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });
 
-test('key press arrow left and arrow right should change to prev and next selected image', () => {
-  const cmock = canvasMock();
-  const viewer = new Viewer(cmock);
-  const src1 = 'a1';
-  const src2 = 'a2';
-  viewer.addImage(src1);
-  viewer.addImage(src2);
-  viewer.items[0]._image.dispatchEvent(new Event('load'));
-  viewer.items[1]._image.dispatchEvent(new Event('load'));
-  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
-  expect(viewer.current).toBe(0);
-  cmock.dispatch('keypress', { which: 37 });
-  expect(viewer.current).toBe(0);
-  cmock.dispatch('keypress', { which: 39 });
-  expect(viewer.current).toBe(1);
-  cmock.dispatch('keypress', { which: 39 });
-  expect(viewer.current).toBe(1);
-  expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
-});
-
 test('drag and drop should just move the selected image', () => {
   const cmock = canvasMock();
   cmock.height = 10;
