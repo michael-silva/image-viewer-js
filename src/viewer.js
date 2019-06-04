@@ -42,14 +42,17 @@ export class Viewer {
       .subscribe(({ currPosition, lastPosition }) => {
         if (!this.selected || !this.selected.isLoaded()) return;
         const delta = subArrays(currPosition, lastPosition);
-        this.selected.moveOn(this, delta);
+        this.selected.moveOn(delta);
         this.selected.drawOn(this);
       });
 
-    fromEvent(canvas, 'resize')
-      .subscribe(() => this.restore());
-    fromEvent(window, 'resize')
-      .subscribe(() => this.restore());
+    fromEvent(canvas.ownerDocument.defaultView, 'resize')
+      .subscribe(() => {
+        this._resizeCanvasToDisplaySize();
+        this.restore();
+      });
+
+    this._resizeCanvasToDisplaySize();
   }
 
   clear() {
@@ -62,6 +65,16 @@ export class Viewer {
 
   isAllLoaded() {
     return this._items[this.length - 1].isLoaded();
+  }
+
+  _resizeCanvasToDisplaySize() {
+    const width = this._canvas.clientWidth;
+    const height = this._canvas.clientHeight;
+
+    if (this._canvas.width !== width || this._canvas.height !== height) {
+      this._canvas.width = width;
+      this._canvas.height = height;
+    }
   }
 
   _loadImage(index) {

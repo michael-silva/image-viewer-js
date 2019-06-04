@@ -160,8 +160,6 @@ test('mouse wheel should zoom just the selected image', () => {
 
 test('drag and drop should just move the selected image', () => {
   const cmock = canvasMock();
-  cmock.height = 10;
-  cmock.width = 10;
   const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
@@ -169,6 +167,8 @@ test('drag and drop should just move the selected image', () => {
   viewer.addImage(src2);
   viewer.items[0]._image.dispatchEvent(new Event('load'));
   viewer.items[1]._image.dispatchEvent(new Event('load'));
+  Object.defineProperty(viewer.items[0]._image, 'naturalWidth', { get: () => 100 });
+  Object.defineProperty(viewer.items[0]._image, 'naturalHeight', { get: () => 100 });
   expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
   expect(viewer.items[1].position).toEqual([0, 0]);
   expect(viewer.selected.position).toEqual([0, 0]);
@@ -176,20 +176,18 @@ test('drag and drop should just move the selected image', () => {
   cmock.dispatch('mousedown', { clientX: 30, clientY: 30 });
   expect(viewer.selected.position).toEqual([0, 0]);
   expect(viewer.items[1].position).toEqual([0, 0]);
-  cmock.dispatch('mousemove', { clientX: 40, clientY: 40 });
-  expect(viewer.selected.position).toEqual([10, 10]);
+  cmock.dispatch('mousemove', { clientX: 20, clientY: 20 });
+  expect(viewer.selected.position).toEqual([-10, -10]);
   expect(viewer.items[1].position).toEqual([0, 0]);
-  cmock.dispatch('mouseup', { clientX: 40, clientY: 40 });
-  cmock.dispatch('mousemove', { clientX: 60, clientY: 30 });
-  expect(viewer.selected.position).toEqual([10, 10]);
+  cmock.dispatch('mouseup', { clientX: 20, clientY: 20 });
+  cmock.dispatch('mousemove', { clientX: 10, clientY: 20 });
+  expect(viewer.selected.position).toEqual([-10, -10]);
   expect(viewer.items[1].position).toEqual([0, 0]);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });
 
 test('on resize just all the transformations are reseted', () => {
   const cmock = canvasMock();
-  cmock.height = 10;
-  cmock.width = 10;
   const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
@@ -197,25 +195,25 @@ test('on resize just all the transformations are reseted', () => {
   viewer.addImage(src2);
   viewer.items[0]._image.dispatchEvent(new Event('load'));
   viewer.items[1]._image.dispatchEvent(new Event('load'));
+  Object.defineProperty(viewer.items[0]._image, 'naturalWidth', { get: () => 100 });
+  Object.defineProperty(viewer.items[0]._image, 'naturalHeight', { get: () => 100 });
   expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
   expect(viewer.selected.position).toEqual([0, 0]);
   expect(viewer.selected.scale).toEqual(1);
   cmock.dispatch('mousedown', { clientX: 30, clientY: 30 });
-  cmock.dispatch('mousemove', { clientX: 40, clientY: 40 });
-  cmock.dispatch('mouseup', { clientX: 40, clientY: 40 });
+  cmock.dispatch('mousemove', { clientX: 20, clientY: 20 });
+  cmock.dispatch('mouseup', { clientX: 20, clientY: 20 });
   cmock.dispatch('wheel', { wheelDelta: 60 });
-  expect(viewer.selected.position).toEqual([10, 10]);
+  expect(viewer.selected.position).toEqual([-10, -10]);
   expect(viewer.selected.scale).toEqual(1.5);
-  cmock.dispatch('resize', { });
+  cmock.ownerDocument.defaultView.dispatch('resize', { });
   expect(viewer.selected.position).toEqual([0, 0]);
   expect(viewer.selected.scale).toEqual(1);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(4);
 });
 
 test('on navigate to next or prev just all the transformations are reseted', () => {
-  const cmock = canvasMock();
-  cmock.height = 10;
-  cmock.width = 10;
+  const cmock = canvasMock(10, 10);
   const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
@@ -223,14 +221,16 @@ test('on navigate to next or prev just all the transformations are reseted', () 
   viewer.addImage(src2);
   viewer.items[0]._image.dispatchEvent(new Event('load'));
   viewer.items[1]._image.dispatchEvent(new Event('load'));
+  Object.defineProperty(viewer.items[0]._image, 'naturalWidth', { get: () => 100 });
+  Object.defineProperty(viewer.items[0]._image, 'naturalHeight', { get: () => 100 });
   expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
   expect(viewer.selected.position).toEqual([0, 0]);
   expect(viewer.selected.scale).toEqual(1);
   cmock.dispatch('mousedown', { clientX: 30, clientY: 30 });
-  cmock.dispatch('mousemove', { clientX: 40, clientY: 40 });
-  cmock.dispatch('mouseup', { clientX: 40, clientY: 40 });
+  cmock.dispatch('mousemove', { clientX: 20, clientY: 20 });
+  cmock.dispatch('mouseup', { clientX: 20, clientY: 20 });
   cmock.dispatch('wheel', { wheelDelta: 60 });
-  expect(viewer.selected.position).toEqual([10, 10]);
+  expect(viewer.selected.position).toEqual([-10, -10]);
   expect(viewer.selected.scale).toEqual(1.5);
   viewer.next();
   expect(viewer.selected.position).toEqual([0, 0]);

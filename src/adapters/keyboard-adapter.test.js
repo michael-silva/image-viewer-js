@@ -6,7 +6,7 @@ import { contextMock, canvasMock } from '../test-utils';
 test('key press arrow left and arrow right should change to prev and next selected image', () => {
   const cmock = canvasMock();
   const viewer = new Viewer(cmock);
-  keyboardAdapter(viewer);
+  keyboardAdapter(cmock, viewer);
   const src1 = 'a1';
   const src2 = 'a2';
   viewer.addImage(src1);
@@ -15,11 +15,11 @@ test('key press arrow left and arrow right should change to prev and next select
   viewer.items[1]._image.dispatchEvent(new Event('load'));
   expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
   expect(viewer.current).toBe(0);
-  cmock.dispatch('keyup', { key: 'ArrowLeft' });
+  cmock.ownerDocument.dispatch('keyup', { key: 'ArrowLeft' });
   expect(viewer.current).toBe(0);
-  cmock.dispatch('keyup', { key: 'ArrowRight' });
+  cmock.ownerDocument.dispatch('keyup', { key: 'ArrowRight' });
   expect(viewer.current).toBe(1);
-  cmock.dispatch('keyup', { key: 'ArrowRight' });
+  cmock.ownerDocument.dispatch('keyup', { key: 'ArrowRight' });
   expect(viewer.current).toBe(1);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });

@@ -1,4 +1,5 @@
 import { fromEvent } from './observable';
+import { sumArrays } from './utils';
 
 export const stepZoom = (scale, step = 1) => {
   const steps = [1, 1.4, 1.8, 2];
@@ -58,9 +59,8 @@ export class ViewerImage {
     this._scale = freeZoom(this.scale, delta);
   }
 
-  moveOn(viewer, delta) {
-    const bounds = this._getBoundsOn(viewer);
-    this._position = this._translateOn(bounds, delta);
+  moveOn(delta) {
+    this._position = sumArrays(this.position, delta);
   }
 
   load() {
@@ -77,22 +77,24 @@ export class ViewerImage {
 
   drawOn(viewer) {
     viewer.clear();
+    this._repositioning(viewer);
     const size = [
-      this.naturalWidth * this._scale,
-      this.naturalHeight * this._scale,
+      this.naturalWidth * this.scale,
+      this.naturalHeight * this.scale,
     ];
     viewer.drawImage(this._image, this.position, size);
   }
 
-  _translateOn(bounds, delta) {
+  _repositioning(viewer) {
+    const bounds = this._getBoundsOn(viewer);
     const {
       minX, maxX, minY, maxY,
     } = bounds;
 
-    const x = Math.max(minX, Math.min(maxX, this.position[0] + delta[0]));
-    const y = Math.max(minY, Math.min(maxY, this.position[1] + delta[1]));
+    const x = Math.min(maxX, Math.max(minX, this.position[0]));
+    const y = Math.min(maxY, Math.max(minY, this.position[1]));
 
-    return [x, y];
+    this._position = [x, y];
   }
 
   _getBoundsOn(viewer) {
