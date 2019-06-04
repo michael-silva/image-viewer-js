@@ -6,18 +6,46 @@
   <meta name="viewport" content="width=device-width">
   <title>Image Viewer</title>
   <style>
+    * {
+      box-sizing: border-box
+    }
+    
     body {
-      background: #000;
+      background: #ededed;
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
     }
 
     #canvas {
-      background: #fff;
+      background: #ededed;
+      border: 4px solid #363636;
+      display: block;
+      width: 100%;
+      height: 100%
+    }
+
+    .container {
+      border: 2px solid #363636;
+      width: 50%;
+      min-width: 500px;
+      max-width: 1300px;
+      height: 80vh;
+      min-height: 300px;
+      max-height: 1500px;
+      padding: 20px;
     }
   </style>
 </head>
 
 <body>
-  <canvas id="canvas"></canvas>
+  <div class="container">
+    <canvas id="canvas"></canvas>
+  </div>
   <script src="index.js"></script>
 </body>
 
