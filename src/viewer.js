@@ -42,7 +42,11 @@ export class Viewer {
       .subscribe(({ currPosition, lastPosition }) => {
         if (!this.selected || !this.selected.isLoaded()) return;
         const delta = subArrays(currPosition, lastPosition);
+<<<<<<< Updated upstream
         this.selected.moveOn(this, delta);
+=======
+        this.selected.translate(delta);
+>>>>>>> Stashed changes
         this.selected.drawOn(this);
       });
 
@@ -100,10 +104,10 @@ export class Viewer {
     return this;
   }
 
-  /* removeImage(index) {
+  removeByIndex(index) {
     this._items.splice(index, 1);
     return this;
-  } */
+  }
 
   select(index) {
     if (index !== this.current) {
@@ -163,7 +167,7 @@ export class Viewer {
 
   moveTo(x, y) {
     if (this.selected && this.selected.isLoaded()) {
-      this.selected.moveTo([x, y]);
+      this.selected.translate(x, y);
       this.selected.drawOn(this);
     }
     return this;

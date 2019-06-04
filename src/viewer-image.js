@@ -58,9 +58,14 @@ export class ViewerImage {
     this._scale = freeZoom(this.scale, delta);
   }
 
+<<<<<<< Updated upstream
   moveOn(viewer, delta) {
     const bounds = this._getBoundsOn(viewer);
     this._position = this._translateOn(bounds, delta);
+=======
+  translate(delta) {
+    this._position = sumArrays(this.position, delta);
+>>>>>>> Stashed changes
   }
 
   load() {

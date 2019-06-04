@@ -26,6 +26,21 @@ test('viewer should add multiple images', () => {
   expect(viewer.items).toHaveLength(3);
 });
 
+test('viewer should remove an image after added', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  const src3 = 'a3';
+  viewer.addImage(src1).addImage(src2);
+  viewer.addImage(src3);
+  viewer.removeByIndex(2);
+  viewer.removeByIndex(6); // invalid index
+  expect(viewer.items).toHaveLength(2);
+  viewer.removeByIndex(0);
+  expect(viewer.items).toHaveLength(1);
+});
+
 test('viewer should start loading when add first image', () => {
   const cmock = canvasMock();
   const viewer = new Viewer(cmock);
@@ -118,6 +133,45 @@ test('viewer should navigate between images', () => {
   expect(viewer.current).toBe(0);
 });
 
+test('manually trigger zoom in and out should zoomStep just the selected image', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  viewer.select(1);
+  viewer.zoomIn();
+  expect(viewer.selected.scale).toBe(1);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  viewer.items[1]._image.dispatchEvent(new Event('load'));
+  viewer.zoomIn();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1.4);
+  viewer.zoomIn();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1.8);
+  viewer.zoomIn();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(2);
+  viewer.zoomIn();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1);
+  viewer.zoomOut();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(2);
+  viewer.zoomOut();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1.8);
+  viewer.zoomOut();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1.4);
+  viewer.zoomOut();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(9);
+});
+
 test('double click should zoomStep just the selected image', () => {
   const cmock = canvasMock();
   const viewer = new Viewer(cmock);
@@ -204,6 +258,29 @@ test('drag and drop should just move the selected image', () => {
   expect(viewer.selected.position).toEqual([10, 10]);
   expect(viewer.items[1].position).toEqual([0, 0]);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
+});
+
+test('manually trigger the move should just move the selected image', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  viewer.items[1]._image.dispatchEvent(new Event('load'));
+  Object.defineProperty(viewer.items[0]._image, 'naturalWidth', { get: () => 100 });
+  Object.defineProperty(viewer.items[0]._image, 'naturalHeight', { get: () => 100 });
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+  expect(viewer.items[1].position).toEqual([0, 0]);
+  expect(viewer.selected.position).toEqual([0, 0]);
+  viewer.moveTo([10, 10]);
+  expect(viewer.selected.position).toEqual([0, 0]);
+  expect(viewer.items[1].position).toEqual([0, 0]);
+  viewer.moveTo([-10, -10]);
+  expect(viewer.selected.position).toEqual([-10, -10]);
+  expect(viewer.items[1].position).toEqual([0, 0]);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(3);
 });
 
 test('on resize just all the transformations are reseted', () => {
