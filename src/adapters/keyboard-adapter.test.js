@@ -21,5 +21,7 @@ test('key press arrow left and arrow right should change to prev and next select
   expect(viewer.current).toBe(1);
   cmock.ownerDocument.dispatch('keyup', { key: 'ArrowRight' });
   expect(viewer.current).toBe(1);
+  cmock.ownerDocument.dispatch('keyup', { key: 'A' });
+  expect(viewer.current).toBe(1);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });
