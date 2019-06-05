@@ -1,4 +1,4 @@
-import { fromEvent } from './observable';
+import { fromEvent } from './utils/observable';
 import { mouseTrack } from './mouse-track';
 import { subArrays } from './utils';
 import { ViewerImage } from './viewer-image';
@@ -65,28 +65,6 @@ export class Viewer {
 
   isAllLoaded() {
     return this._items[this.length - 1].isLoaded();
-  }
-
-  _resizeCanvasToDisplaySize() {
-    const width = this._canvas.clientWidth;
-    const height = this._canvas.clientHeight;
-
-    if (this._canvas.width !== width || this._canvas.height !== height) {
-      this._canvas.width = width;
-      this._canvas.height = height;
-    }
-  }
-
-  _loadImage(index) {
-    if (index < 0 || index >= this.length) return;
-    const item = this._items[index];
-    item.load()
-      .subscribe(() => {
-        if (index === this.current) {
-          this.restore();
-        }
-        this._loadImage(index + 1);
-      });
   }
 
   addImage(src, imgW, imgH) {
@@ -170,5 +148,27 @@ export class Viewer {
       this.selected.drawOn(this);
     }
     return this;
+  }
+
+  _resizeCanvasToDisplaySize() {
+    const width = this._canvas.clientWidth;
+    const height = this._canvas.clientHeight;
+
+    if (this._canvas.width !== width || this._canvas.height !== height) {
+      this._canvas.width = width;
+      this._canvas.height = height;
+    }
+  }
+
+  _loadImage(index) {
+    if (index < 0 || index >= this.length) return;
+    const item = this._items[index];
+    item.load()
+      .subscribe(() => {
+        if (index === this.current) {
+          this.restore();
+        }
+        this._loadImage(index + 1);
+      });
   }
 }

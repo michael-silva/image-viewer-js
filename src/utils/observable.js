@@ -1,11 +1,18 @@
 const Observable = () => {
   const subscribers = [];
+  const errorHandlers = [];
   return {
     next: (...args) => {
       subscribers.forEach((sub) => sub(...args));
     },
     subscribe: (callback) => {
       subscribers.push(callback);
+    },
+    error: (...args) => {
+      subscribers.forEach((sub) => sub(...args));
+    },
+    catch: (callback) => {
+      errorHandlers.push(callback);
     },
   };
 };

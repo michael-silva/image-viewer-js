@@ -1,7 +1,9 @@
 /* eslint-disable no-underscore-dangle */
-import { canvasMock, contextMock } from '../test-utils';
+import { canvasMock, contextMock } from '../utils/test-utils';
 import { Viewer } from '../viewer';
 import hammerAdapter from './hammerjs-adapter';
+
+jest.mock('../utils/load-image');
 
 afterEach(() => {
   contextMock.drawImage.mockReset();

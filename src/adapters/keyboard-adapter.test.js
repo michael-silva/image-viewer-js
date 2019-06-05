@@ -1,7 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 import { Viewer } from '../viewer';
 import keyboardAdapter from './keyboard-adapter';
-import { contextMock, canvasMock } from '../test-utils';
+import { contextMock, canvasMock } from '../utils/test-utils';
+
+jest.mock('../utils/load-image');
 
 test('key press arrow left and arrow right should change to prev and next selected image', () => {
   const cmock = canvasMock();

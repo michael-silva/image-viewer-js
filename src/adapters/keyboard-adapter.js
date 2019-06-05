@@ -1,4 +1,4 @@
-import { fromEvent } from '../observable';
+import { fromEvent } from '../utils/observable';
 
 const hammerAdapter = (canvas, viewer) => {
   fromEvent(canvas.ownerDocument, 'keyup')

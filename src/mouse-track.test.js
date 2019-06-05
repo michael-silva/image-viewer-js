@@ -1,4 +1,4 @@
-import { canvasMock } from './test-utils';
+import { canvasMock } from './utils/test-utils';
 import { mouseTrack } from './mouse-track';
 
 

@@ -1,6 +1,8 @@
 /* eslint-disable no-underscore-dangle */
-import { canvasMock, contextMock } from './test-utils';
+import { canvasMock, contextMock } from './utils/test-utils';
 import { Viewer } from './viewer';
+
+jest.mock('./utils/load-image');
 
 afterEach(() => {
   contextMock.drawImage.mockReset();
@@ -290,7 +292,7 @@ test('on resize just all the transformations are reseted', () => {
 });
 
 test('on navigate to next or prev just all the transformations are reseted', () => {
-  const cmock = canvasMock(10, 10);
+  const cmock = canvasMock();
   const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
@@ -316,4 +318,23 @@ test('on navigate to next or prev just all the transformations are reseted', () 
   expect(viewer.selected.position).toEqual([0, 0]);
   expect(viewer.selected.scale).toEqual(1);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(5);
+});
+
+test('should draw a placeholder image during the load', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const ph = 'src';
+  viewer.setPlaceholder(ph);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+  expect(contextMock.drawImage).toHaveBeenCalledWith([viewer._placeholder]);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
+});
+
+test('should update the placeholder image for each loading progress', () => {
+
 });
