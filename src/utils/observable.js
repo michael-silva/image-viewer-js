@@ -2,6 +2,7 @@ const Observable = () => {
   const subscribers = [];
   const errorHandlers = [];
   return {
+    subscribers: () => subscribers,
     next: (...args) => {
       subscribers.forEach((sub) => sub(...args));
     },

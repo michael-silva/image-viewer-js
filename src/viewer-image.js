@@ -33,6 +33,13 @@ export class ViewerImage {
     this.reset();
   }
 
+  onLoading(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('The onLoading parameter needs to be a function');
+    }
+    this._loadingHandler = callback;
+  }
+
   isLoaded() {
     return this._loaded;
   }
@@ -68,7 +75,9 @@ export class ViewerImage {
     if (this._loading || this._loaded) return undefined;
     this._loading = true;
     const loading$ = loadImage(this._src);
-    loading$.subscribe(({ loaded, total, data }) => {
+    loading$.subscribe((current) => {
+      if (this._loadingHandler) this._loadingHandler(current);
+      const { loaded, total, data } = current;
       if (loaded < total || !data) return;
       this._image.src = data;
     });

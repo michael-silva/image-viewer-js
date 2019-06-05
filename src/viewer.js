@@ -69,13 +69,35 @@ export class Viewer {
 
   addImage(src, imgW, imgH) {
     const item = new ViewerImage(src, imgW, imgH);
+    item.onLoading(this._updatePlaceholder.bind(this));
     this.items.push(item);
 
     if (this.current === null || this.isAllLoaded()) {
-      this._loadImage(this.length - 1);
       if (this.current === null) {
         this.select(0);
       }
+      this._loadImage(this.length - 1);
+    }
+
+    return this;
+  }
+
+  setPlaceholder(...args) {
+    if (typeof args[0] === 'function') {
+      const [fn, update] = args;
+      this._placeholder = fn;
+      this._isToUpdatePlaceholder = update;
+    }
+    else {
+      this.setPlaceholderImage(...args);
+    }
+  }
+
+  setPlaceholderImage(src, position = [0, 0], [width, height] = []) {
+    this._placeholder = new ViewerImage(src, width, height);
+    this._placeholder.translate(position);
+    if (this.selected && !this.selected.isLoaded()) {
+      this._drawPlaceholder();
     }
 
     return this;
@@ -160,9 +182,26 @@ export class Viewer {
     }
   }
 
+  _updatePlaceholder(state) {
+    if (!this._isToUpdatePlaceholder) return;
+    this._drawPlaceholder(state);
+  }
+
+  _drawPlaceholder(...args) {
+    if (this._placeholder instanceof ViewerImage) {
+      this._placeholder.drawOn(this);
+    }
+    else if (typeof this._placeholder === 'function') {
+      this._placeholder(this._ctx, ...args);
+    }
+  }
+
   _loadImage(index) {
     if (index < 0 || index >= this.length) return;
     const item = this._items[index];
+    if (index === this.current) {
+      this._drawPlaceholder();
+    }
     item.load()
       .subscribe(() => {
         if (index === this.current) {
