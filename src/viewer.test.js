@@ -1,6 +1,16 @@
 /* eslint-disable no-underscore-dangle */
-import { canvasMock, contextMock } from './test-utils';
+import { canvasMock, contextMock } from './utils/test-utils';
 import { Viewer } from './viewer';
+
+let loadImageObservable;
+jest.mock('./utils/load-image', () => ({
+  loadImage: () => {
+    // eslint-disable-next-line global-require
+    const observable = require('./utils/observable').of({});
+    loadImageObservable = observable;
+    return observable;
+  },
+}));
 
 afterEach(() => {
   contextMock.drawImage.mockReset();
@@ -24,6 +34,21 @@ test('viewer should add multiple images', () => {
   viewer.addImage(src1).addImage(src2);
   viewer.addImage(src3);
   expect(viewer.items).toHaveLength(3);
+});
+
+test('viewer should remove an image after added', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  const src3 = 'a3';
+  viewer.addImage(src1).addImage(src2);
+  viewer.addImage(src3);
+  viewer.removeByIndex(2);
+  viewer.removeByIndex(6); // invalid index
+  expect(viewer.items).toHaveLength(2);
+  viewer.removeByIndex(0);
+  expect(viewer.items).toHaveLength(1);
 });
 
 test('viewer should start loading when add first image', () => {
@@ -118,6 +143,45 @@ test('viewer should navigate between images', () => {
   expect(viewer.current).toBe(0);
 });
 
+test('manually trigger zoom in and out should zoomStep just the selected image', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  viewer.select(1);
+  viewer.zoomIn();
+  expect(viewer.selected.scale).toBe(1);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  viewer.items[1]._image.dispatchEvent(new Event('load'));
+  viewer.zoomIn();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1.4);
+  viewer.zoomIn();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1.8);
+  viewer.zoomIn();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(2);
+  viewer.zoomIn();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1);
+  viewer.zoomOut();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(2);
+  viewer.zoomOut();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1.8);
+  viewer.zoomOut();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1.4);
+  viewer.zoomOut();
+  expect(viewer.items[0].scale).toBe(1);
+  expect(viewer.selected.scale).toBe(1);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(9);
+});
+
 test('double click should zoomStep just the selected image', () => {
   const cmock = canvasMock();
   const viewer = new Viewer(cmock);
@@ -186,6 +250,29 @@ test('drag and drop should just move the selected image', () => {
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });
 
+test('manually trigger the move should just move the selected image', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  viewer.items[1]._image.dispatchEvent(new Event('load'));
+  Object.defineProperty(viewer.items[0]._image, 'naturalWidth', { get: () => 100 });
+  Object.defineProperty(viewer.items[0]._image, 'naturalHeight', { get: () => 100 });
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+  expect(viewer.items[1].position).toEqual([0, 0]);
+  expect(viewer.selected.position).toEqual([0, 0]);
+  viewer.moveTo([10, 10]);
+  expect(viewer.selected.position).toEqual([0, 0]);
+  expect(viewer.items[1].position).toEqual([0, 0]);
+  viewer.moveTo([-10, -10]);
+  expect(viewer.selected.position).toEqual([-10, -10]);
+  expect(viewer.items[1].position).toEqual([0, 0]);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(3);
+});
+
 test('on resize just all the transformations are reseted', () => {
   const cmock = canvasMock();
   const viewer = new Viewer(cmock);
@@ -213,7 +300,7 @@ test('on resize just all the transformations are reseted', () => {
 });
 
 test('on navigate to next or prev just all the transformations are reseted', () => {
-  const cmock = canvasMock(10, 10);
+  const cmock = canvasMock();
   const viewer = new Viewer(cmock);
   const src1 = 'a1';
   const src2 = 'a2';
@@ -239,4 +326,72 @@ test('on navigate to next or prev just all the transformations are reseted', () 
   expect(viewer.selected.position).toEqual([0, 0]);
   expect(viewer.selected.scale).toEqual(1);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(5);
+});
+
+test('should draw a placeholder image during the load', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const ph = 'src';
+  viewer.setPlaceholder(ph);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+  const image = viewer._placeholder._image;
+  const { naturalWidth, naturalHeight } = image;
+  expect(contextMock.drawImage).toHaveBeenCalledWith(image, 0, 0, naturalWidth, naturalHeight);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
+});
+
+test('should draw a placeholder image during the load', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const ph = 'src';
+  viewer.setPlaceholder(ph);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+  const image = viewer._placeholder._image;
+  const { naturalWidth, naturalHeight } = image;
+  expect(contextMock.drawImage).toHaveBeenCalledWith(image, 0, 0, naturalWidth, naturalHeight);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
+});
+
+test('should draw a placeholder based on a funtion during the load', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const placeholderFn = jest.fn();
+  viewer.setPlaceholder(placeholderFn);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  expect(placeholderFn).toHaveBeenCalledTimes(1);
+  expect(placeholderFn).toHaveBeenCalledWith(contextMock);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+});
+
+test('should update the placeholder image for each loading progress', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const placeholderFn = jest.fn();
+  viewer.setPlaceholder(placeholderFn, true);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  loadImageObservable.next({ loaded: 0, total: 100 });
+  loadImageObservable.next({ loaded: 30, total: 100 });
+  loadImageObservable.next({ loaded: 60, total: 100 });
+  loadImageObservable.next({ loaded: 100, total: 100 });
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  expect(placeholderFn).toHaveBeenCalledTimes(5);
+  expect(placeholderFn).toHaveBeenCalledWith(contextMock);
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
 });

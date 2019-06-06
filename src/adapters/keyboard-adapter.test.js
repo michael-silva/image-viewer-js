@@ -1,7 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 import { Viewer } from '../viewer';
 import keyboardAdapter from './keyboard-adapter';
-import { contextMock, canvasMock } from '../test-utils';
+import { contextMock, canvasMock } from '../utils/test-utils';
+
+jest.mock('../utils/load-image');
 
 test('key press arrow left and arrow right should change to prev and next selected image', () => {
   const cmock = canvasMock();
@@ -20,6 +22,8 @@ test('key press arrow left and arrow right should change to prev and next select
   cmock.ownerDocument.dispatch('keyup', { key: 'ArrowRight' });
   expect(viewer.current).toBe(1);
   cmock.ownerDocument.dispatch('keyup', { key: 'ArrowRight' });
+  expect(viewer.current).toBe(1);
+  cmock.ownerDocument.dispatch('keyup', { key: 'A' });
   expect(viewer.current).toBe(1);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });

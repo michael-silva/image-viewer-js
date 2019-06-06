@@ -1,4 +1,5 @@
-import { fromEvent } from './observable';
+import { fromEvent } from './utils/observable';
+import { loadImage } from './utils/load-image';
 import { sumArrays } from './utils';
 
 export const stepZoom = (scale, step = 1) => {
@@ -32,6 +33,13 @@ export class ViewerImage {
     this.reset();
   }
 
+  onLoading(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('The onLoading parameter needs to be a function');
+    }
+    this._loadingHandler = callback;
+  }
+
   isLoaded() {
     return this._loaded;
   }
@@ -59,19 +67,26 @@ export class ViewerImage {
     this._scale = freeZoom(this.scale, delta);
   }
 
-  moveOn(delta) {
+  translate(delta) {
     this._position = sumArrays(this.position, delta);
   }
 
   load() {
     if (this._loading || this._loaded) return undefined;
     this._loading = true;
-    const load$ = fromEvent(this._image, 'load');
-    load$.subscribe(() => {
-      this._loading = false;
-      this._loaded = true;
+    const loading$ = loadImage(this._src);
+    loading$.subscribe((current) => {
+      if (this._loadingHandler) this._loadingHandler(current);
+      const { loaded, total, data } = current;
+      if (loaded < total || !data) return;
+      this._image.src = data;
     });
-    this._image.src = this._src;
+    const load$ = fromEvent(this._image, 'load');
+    load$
+      .subscribe(() => {
+        this._loading = false;
+        this._loaded = true;
+      });
     return load$;
   }
 

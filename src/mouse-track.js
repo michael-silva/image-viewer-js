@@ -1,4 +1,4 @@
-import { fromEvent, of } from './observable';
+import { fromEvent, of } from './utils/observable';
 
 export const mouseTrack = (elem) => {
   const transform = {

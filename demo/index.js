@@ -9,6 +9,26 @@ const canvas = document.getElementById('canvas');
 const viewer = setupViewer(canvas);
 keyboardAdapter(canvas, viewer);
 // hammerjsAdapter(canvas, viewer);
+viewer.setPlaceholder((ctx, update) => {
+  // if (update && update.loaded === update.total) return;
+  const x = viewer.width / 2;
+  const y = viewer.height / 2;
+  const radius = 50;
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = 'gray';
+  ctx.stroke();
+  if (update) {
+    const percent = (update.loaded * 100) / update.total;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, ((percent / 100) * 2) * Math.PI);
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'orange';
+    ctx.stroke();
+  }
+}, true);
+
 viewer
-  .addImage('https://images.unsplash.com/photo-1483030096298-4ca126b58199?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80')
-  .addImage('https://images.pexels.com/photos/68147/waterfall-thac-dray-nur-buon-me-thuot-daklak-68147.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260');
+  .addImage('images/home-1622401_1280.jpg')
+  .addImage('images/pexels-photo-853199.jpeg');

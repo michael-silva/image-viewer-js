@@ -1,4 +1,4 @@
-import { fromEvent } from './observable';
+import { fromEvent } from './utils/observable';
 import { mouseTrack } from './mouse-track';
 import { subArrays } from './utils';
 import { ViewerImage } from './viewer-image';
@@ -42,7 +42,7 @@ export class Viewer {
       .subscribe(({ currPosition, lastPosition }) => {
         if (!this.selected || !this.selected.isLoaded()) return;
         const delta = subArrays(currPosition, lastPosition);
-        this.selected.moveOn(delta);
+        this.selected.translate(delta);
         this.selected.drawOn(this);
       });
 
@@ -67,51 +67,54 @@ export class Viewer {
     return this._items[this.length - 1].isLoaded();
   }
 
-  _resizeCanvasToDisplaySize() {
-    const width = this._canvas.clientWidth;
-    const height = this._canvas.clientHeight;
-
-    if (this._canvas.width !== width || this._canvas.height !== height) {
-      this._canvas.width = width;
-      this._canvas.height = height;
-    }
-  }
-
-  _loadImage(index) {
-    if (index < 0 || index >= this.length) return;
-    const item = this._items[index];
-    item.load()
-      .subscribe(() => {
-        if (index === this.current) {
-          this.restore();
-        }
-        this._loadImage(index + 1);
-      });
-  }
-
   addImage(src, imgW, imgH) {
     const item = new ViewerImage(src, imgW, imgH);
+    item.onLoading(this._updatePlaceholder.bind(this));
     this.items.push(item);
 
     if (this.current === null || this.isAllLoaded()) {
-      this._loadImage(this.length - 1);
       if (this.current === null) {
         this.select(0);
       }
+      this._loadImage(this.length - 1);
     }
 
     return this;
   }
 
-  /* removeImage(index) {
+  setPlaceholder(...args) {
+    if (typeof args[0] === 'function') {
+      const [fn, update] = args;
+      this._placeholder = fn;
+      this._isToUpdatePlaceholder = update;
+    }
+    else {
+      this.setPlaceholderImage(...args);
+    }
+  }
+
+  setPlaceholderImage(src, position = [0, 0], [width, height] = []) {
+    this._placeholder = new ViewerImage(src, width, height);
+    this._placeholder.translate(position);
+    if (this.selected && !this.selected.isLoaded()) {
+      this._drawPlaceholder();
+    }
+
+    return this;
+  }
+
+  removeByIndex(index) {
     this._items.splice(index, 1);
     return this;
-  } */
+  }
 
   select(index) {
     if (index !== this.current) {
       this._current = index;
       this.restore();
+      if (!this.selected.isLoaded()) {
+        this._drawPlaceholder();
+      }
     }
     return this;
   }
@@ -157,18 +160,58 @@ export class Viewer {
   }
 
   restore() {
-    if (this.selected && this.selected.isLoaded()) {
-      this.selected.reset();
-      this.selected.drawOn(this);
+    if (this.selected) {
+      if (this.selected.isLoaded()) {
+        this.selected.reset();
+        this.selected.drawOn(this);
+      }
     }
     return this;
   }
 
   moveTo(x, y) {
     if (this.selected && this.selected.isLoaded()) {
-      this.selected.moveTo([x, y]);
+      this.selected.translate(x, y);
       this.selected.drawOn(this);
     }
     return this;
+  }
+
+  _resizeCanvasToDisplaySize() {
+    const width = this._canvas.clientWidth;
+    const height = this._canvas.clientHeight;
+
+    if (this._canvas.width !== width || this._canvas.height !== height) {
+      this._canvas.width = width;
+      this._canvas.height = height;
+    }
+  }
+
+  _updatePlaceholder(state) {
+    if (this._isToUpdatePlaceholder && this.selected.isLoading()) {
+      this._drawPlaceholder(state);
+    }
+  }
+
+  _drawPlaceholder(...args) {
+    if (this._placeholder instanceof ViewerImage) {
+      this._placeholder.drawOn(this);
+    }
+    else if (typeof this._placeholder === 'function') {
+      this.clear();
+      this._placeholder(this._ctx, ...args);
+    }
+  }
+
+  _loadImage(index) {
+    if (index < 0 || index >= this.length) return;
+    const item = this._items[index];
+    item.load()
+      .subscribe(() => {
+        if (index === this.current) {
+          this.restore();
+        }
+        this._loadImage(index + 1);
+      });
   }
 }
