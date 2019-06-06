@@ -82,6 +82,19 @@ export class Viewer {
     return this;
   }
 
+  onError(fn) {
+    if (typeof fn === 'function') {
+      this._error = fn;
+    }
+  }
+
+  setErrorImage(src, position = [0, 0], [width, height] = []) {
+    this._error = new ViewerImage(src, width, height);
+    this._error.translate(position);
+
+    return this;
+  }
+
   setPlaceholder(...args) {
     if (typeof args[0] === 'function') {
       const [fn, update] = args;
@@ -111,8 +124,13 @@ export class Viewer {
   select(index) {
     if (index !== this.current) {
       this._current = index;
-      this.restore();
-      if (!this.selected.isLoaded()) {
+      if (this.selected.isLoaded()) {
+        this.restore();
+      }
+      else if (this.selected.hasError()) {
+        this._drawError();
+      }
+      else {
         this._drawPlaceholder();
       }
     }
@@ -193,6 +211,16 @@ export class Viewer {
     }
   }
 
+  _drawError(error) {
+    if (this._error instanceof ViewerImage) {
+      this._error.drawOn(this);
+    }
+    else if (typeof this._error === 'function') {
+      this.clear();
+      this._error(this._ctx, error);
+    }
+  }
+
   _drawPlaceholder(...args) {
     if (this._placeholder instanceof ViewerImage) {
       this._placeholder.drawOn(this);
@@ -210,6 +238,12 @@ export class Viewer {
       .subscribe(() => {
         if (index === this.current) {
           this.restore();
+        }
+        this._loadImage(index + 1);
+      })
+      .catch((e) => {
+        if (index === this.current) {
+          this._drawError(e);
         }
         this._loadImage(index + 1);
       });

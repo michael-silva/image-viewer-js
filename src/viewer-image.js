@@ -40,6 +40,10 @@ export class ViewerImage {
     this._loadingHandler = callback;
   }
 
+  hasError() {
+    return this._hasError;
+  }
+
   isLoaded() {
     return this._loaded;
   }
@@ -87,6 +91,12 @@ export class ViewerImage {
         this._loading = false;
         this._loaded = true;
       });
+
+    loading$.catch((e) => {
+      this._loading = false;
+      this._hasError = true;
+      load$.error(e);
+    });
     return load$;
   }
 
