@@ -395,3 +395,30 @@ test('should update the placeholder image for each loading progress', () => {
   expect(placeholderFn).toHaveBeenCalledWith(contextMock);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
 });
+
+test('should draw an image when and error occurr', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  viewer.setErrorImage('error');
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  loadImageObservable.error({});
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+});
+
+test('should execute an erro draw callback when and error occurr', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const errorFn = jest.fn();
+  viewer.onError(errorFn);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  loadImageObservable.error({});
+  expect(errorFn).toHaveBeenCalledTimes(1);
+  expect(errorFn).toHaveBeenCalledWith(contextMock, {});
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(0);
+});

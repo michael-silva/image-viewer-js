@@ -29,6 +29,18 @@ viewer.setPlaceholder((ctx, update) => {
   }
 }, true);
 
+viewer.onError((ctx) => {
+  const x = viewer.width / 2;
+  const y = viewer.height / 2 - 15;
+  ctx.beginPath();
+
+  ctx.font = '30px serif';
+
+  ctx.textAlign = 'center';
+  ctx.fillText('Error', x, y);
+});
+
 viewer
   .addImage('images/home-1622401_1280.jpg')
+  .addImage('images/error.jpg')
   .addImage('images/pexels-photo-853199.jpeg');
