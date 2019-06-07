@@ -2,7 +2,7 @@
 
 import { of } from './observable';
 
-export const loadImage = (src) => {
+export const loadImage = (src, imageSize) => {
   const progress$ = of({ loaded: 0, total: 0 });
 
   fetch(src)
@@ -15,7 +15,7 @@ export const loadImage = (src) => {
         throw Error('ReadableStream not yet supported in this browser.');
       }
 
-      const contentLength = response.headers.get('content-length');
+      const contentLength = response.headers.get('content-length') || imageSize;
       if (!contentLength) {
         throw Error('Content-Length response header unavailable');
       }

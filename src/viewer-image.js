@@ -78,7 +78,7 @@ export class ViewerImage {
   load() {
     if (this._loading || this._loaded) return undefined;
     this._loading = true;
-    const loading$ = loadImage(this._src);
+    const loading$ = loadImage(this._src, this._image.width * this._image.height);
     loading$.subscribe((current) => {
       if (this._loadingHandler) this._loadingHandler(current);
       const { loaded, total, data } = current;
