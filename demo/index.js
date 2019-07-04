@@ -1,49 +1,43 @@
 // import TouchEmulator from 'hammer-touchemulator';
 import setupViewer from '../src/index';
-// import hammerjsAdapter from '../src/adapters/hammerjs-adapter';
 import keyboardAdapter from '../src/adapters/keyboard-adapter';
+import drawMessage from '../src/helpers/drawMessage';
+import drawLoadingPlaceholder from '../src/helpers/drawLoadingPlaceholder';
 
-// TouchEmulator();
+const setupThumbs = (viewer) => {
+  const fragment = document.createDocumentFragment();
+  viewer.items.forEach((item, index) => {
+    item.image.setAttribute('data-index', index);
+    fragment.appendChild(item.image);
+  });
+  const $container = viewer.canvas.parentElement;
+  const $thumbs = $container.querySelector('.iv-thumbs');
+  $thumbs.appendChild(fragment);
 
-const drawErrorMessage = (viewer) => (ctx) => {
-  const x = viewer.width / 2;
-  const y = viewer.height / 2 - 15;
-  ctx.beginPath();
+  $container.addEventListener('click', (e) => {
+    const index = parseInt(e.target.getAttribute('data-index') || '-1');
+    if (index >= 0) {
+      viewer.select(index);
+    }
+  });
 
-  ctx.font = '30px serif';
-
-  ctx.textAlign = 'center';
-  ctx.fillText('Error', x, y);
-};
-
-const drawLoadingPlaceholder = (viewer) => (ctx, update) => {
-  const x = viewer.width / 2;
-  const y = viewer.height / 2;
-  const radius = 50;
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, 2 * Math.PI);
-  ctx.lineWidth = 5;
-  ctx.strokeStyle = 'gray';
-  ctx.stroke();
-  if (update) {
-    const percent = (update.loaded * 100) / update.total;
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, ((percent / 100) * 2) * Math.PI);
-    ctx.lineWidth = 5;
-    ctx.strokeStyle = 'orange';
-    ctx.stroke();
-  }
+  $container.querySelector('.iv-thumbgrid-toggle').addEventListener('click', () => {
+    $thumbs.classList.toggle('open');
+  });
 };
 
 const canvas = document.getElementById('canvas');
 const viewer = setupViewer(canvas);
 keyboardAdapter(canvas, viewer);
-// hammerjsAdapter(canvas, viewer);
 
 viewer.setPlaceholder(drawLoadingPlaceholder(viewer), true);
-viewer.onError(drawErrorMessage(viewer));
+viewer.onError(drawMessage(viewer, 'Error to load image'));
 
 viewer
   .addImage('https://picsum.photos/1200/1000.jpg?random=1', 1200, 1000)
   .addImage('https://picsum.photos/error.jpg?random=2')
-  .addImage('https://picsum.photos/700/1500.jpg?random=3', 700, 1500);
+  .addImage('https://picsum.photos/700/1500.jpg?random=3', 700, 1500)
+  .addImage('https://picsum.photos/700/1500.jpg?random=4', 1500, 1500);
+
+
+setupThumbs(viewer);

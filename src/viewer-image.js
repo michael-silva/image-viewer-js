@@ -19,6 +19,8 @@ export const freeZoom = (scale, delta) => {
 };
 
 export class ViewerImage {
+  get image() { return this._image; }
+
   get scale() { return this._scale; }
 
   get position() { return this._position; }

@@ -4,6 +4,8 @@ import { subArrays } from './utils';
 import { ViewerImage } from './viewer-image';
 
 export class Viewer {
+  get canvas() { return this._canvas; }
+
   get items() { return this._items; }
 
   get length() { return this.items.length; }

@@ -7,7 +7,7 @@
   <title>Image Viewer</title>
   <style>
     * {
-      box-sizing: border-box
+      box-sizing: border-box;
     }
     
     body {
@@ -30,7 +30,8 @@
     }
 
     .container {
-      border: 2px solid #363636;
+      position: relative;
+      background: rgba(100, 100, 100, .4);
       width: 50%;
       min-width: 500px;
       max-width: 1300px;
@@ -39,12 +40,74 @@
       max-height: 1500px;
       padding: 20px;
     }
+
+    .iv-thumbs:not(.open):hover {
+      transition: height .3s ease-out;
+      opacity: 1;
+      height: 100px;
+      visibility: visible;
+      background: rgba(100, 100, 100, .4);
+      overflow: auto;
+    }
+
+    .iv-thumbs {
+      display: flex;
+      flex-wrap: wrap;
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      height: 20px;
+      padding: 8px;
+      opacity: 0;
+    }
+
+    .iv-thumbs.open {
+      transition: opacity .3s ease-out, top .3s ease-in;
+      opacity: 1;
+      z-index: 0;
+      top: 20px;
+      height: auto;
+      padding-top: 35px;
+      visibility: visible;
+      background: rgba(100, 100, 100, .4);
+      overflow: auto;
+    }
+
+    .iv-thumbs.open > img {
+      width: 100px;
+      height: 100px;
+    }
+
+    .iv-thumbs > img {
+      display: block;
+      width: 80px;
+      height: 80px;
+      padding: 8px 8px;
+      object-fit: cover;
+      cursor: pointer;
+    }
+    
+    .iv-thumbs > img:hover {
+      background-color: rgba(200, 200, 200, .4);
+    }
+
+    .iv-thumbgrid-toggle {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      padding: 8px;
+      z-index: 1;
+      background: #eee;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
+    <div class="iv-thumbgrid-toggle">SEE ALL</div>
     <canvas id="canvas"></canvas>
+    <div class="iv-thumbs"></div>
   </div>
   <script src="index.js"></script>
 </body>
