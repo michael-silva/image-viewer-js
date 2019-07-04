@@ -1,10 +1,43 @@
 // import TouchEmulator from 'hammer-touchemulator';
 import setupViewer from '../src/index';
+import keyboardAdapter from '../src/adapters/keyboard-adapter';
+import drawMessage from '../src/helpers/drawMessage';
+import drawLoadingPlaceholder from '../src/helpers/drawLoadingPlaceholder';
 
-// TouchEmulator();
+const setupThumbs = (viewer) => {
+  const fragment = document.createDocumentFragment();
+  viewer.items.forEach((item, index) => {
+    item.image.setAttribute('data-index', index);
+    fragment.appendChild(item.image);
+  });
+  const $container = viewer.canvas.parentElement;
+  const $thumbs = $container.querySelector('.iv-thumbs');
+  $thumbs.appendChild(fragment);
+
+  $container.addEventListener('click', (e) => {
+    const index = parseInt(e.target.getAttribute('data-index') || '-1');
+    if (index >= 0) {
+      viewer.select(index);
+    }
+  });
+
+  $container.querySelector('.iv-thumbgrid-toggle').addEventListener('click', () => {
+    $thumbs.classList.toggle('open');
+  });
+};
+
 const canvas = document.getElementById('canvas');
+const viewer = setupViewer(canvas);
+keyboardAdapter(canvas, viewer);
 
-const viewer = setupViewer(canvas, 300, 300);
+viewer.setPlaceholder(drawLoadingPlaceholder(viewer), true);
+viewer.onError(drawMessage(viewer, 'Error to load image'));
+
 viewer
-  .addImage('https://images.unsplash.com/photo-1483030096298-4ca126b58199?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&w=1000&q=80')
-  .addImage('https://images.pexels.com/photos/68147/waterfall-thac-dray-nur-buon-me-thuot-daklak-68147.jpeg?auto=compress&cs=tinysrgb&dpr=3&h=750&w=1260');
+  .addImage('https://picsum.photos/1200/1000.jpg?random=1', 1200, 1000)
+  .addImage('https://picsum.photos/error.jpg?random=2')
+  .addImage('https://picsum.photos/700/1500.jpg?random=3', 700, 1500)
+  .addImage('https://picsum.photos/700/1500.jpg?random=4', 1500, 1500);
+
+
+setupThumbs(viewer);

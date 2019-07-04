@@ -1,13 +1,22 @@
 const Observable = () => {
   const subscribers = [];
-  return {
+  const errorHandlers = [];
+  const instance = {
     next: (...args) => {
       subscribers.forEach((sub) => sub(...args));
     },
     subscribe: (callback) => {
       subscribers.push(callback);
+      return { catch: instance.catch };
+    },
+    error: (...args) => {
+      errorHandlers.forEach((sub) => sub(...args));
+    },
+    catch: (callback) => {
+      errorHandlers.push(callback);
     },
   };
+  return instance;
 };
 
 export const fromEvent = (elem, event) => {

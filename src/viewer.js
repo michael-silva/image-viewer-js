@@ -1,79 +1,11 @@
-import { fromEvent } from './observable';
+import { fromEvent } from './utils/observable';
 import { mouseTrack } from './mouse-track';
-import { zoomTrack } from './zoom-track';
 import { subArrays } from './utils';
-
-export const translateOn = (bounds) => (translate, delta) => {
-  const {
-    minX, maxX, minY, maxY,
-  } = bounds;
-
-  const x = Math.max(minX, Math.min(maxX, translate[0] + delta[0]));
-  const y = Math.max(minY, Math.min(maxY, translate[1] + delta[1]));
-
-  return [x, y];
-  // return sumArrays(translate, [x, y]);
-};
-
-class ViewerImage {
-  get scale() { return this._scale; }
-
-  get position() { return this._position; }
-
-  get naturalHeight() { return this._image.naturalHeight; }
-
-  get naturalWidth() { return this._image.naturalWidth; }
-
-  constructor(src, width, height) {
-    this._src = src;
-    this._image = new Image(width, height);
-    this.reset();
-  }
-
-  setScale(scale) {
-    this._scale = scale;
-  }
-
-  setPosition(position) {
-    this._position = position;
-  }
-
-  isLoaded() {
-    return this._loaded;
-  }
-
-  isLoading() {
-    return this._loading;
-  }
-
-  reset() {
-    this._position = [0, 0];
-    this._scale = 1;
-  }
-
-  load() {
-    if (this._loading || this._loaded) return undefined;
-    this._loading = true;
-    const load$ = fromEvent(this._image, 'load');
-    load$.subscribe(() => {
-      this._loading = false;
-      this._loaded = true;
-    });
-    this._image.src = this._src;
-    return load$;
-  }
-
-  drawOn(viewer) {
-    viewer.clear();
-    const size = [
-      this.naturalWidth * this._scale,
-      this.naturalHeight * this._scale,
-    ];
-    viewer.drawImage(this._image, this.position, size);
-  }
-}
+import { ViewerImage } from './viewer-image';
 
 export class Viewer {
+  get canvas() { return this._canvas; }
+
   get items() { return this._items; }
 
   get length() { return this.items.length; }
@@ -82,69 +14,47 @@ export class Viewer {
 
   get selected() { return this.items[this.current]; }
 
+  get width() { return this._canvas.width; }
+
+  get height() { return this._canvas.height; }
+
   constructor(canvas) {
     this._canvas = canvas;
     this._items = [];
     this._current = null;
     this._ctx = canvas.getContext('2d');
     this._mouse$ = mouseTrack(canvas);
-    this._zoom$ = zoomTrack(canvas);
-    this._zoom$
-      .subscribe(({ scale }) => {
-        if (!this.selected) return;
-        if (this.selected.isLoaded() && scale !== this.selected.scale) {
-          this.selected.setScale(scale);
-          this.drawSelected();
-        }
+
+    fromEvent(canvas, 'wheel')
+      .subscribe((e) => {
+        if (!this.selected || !this.selected.isLoaded()) return;
+        const delta = e.wheelDelta / 120;
+        this.selected.zoom(delta);
+        this.selected.drawOn(this);
       });
+
+    fromEvent(canvas, 'dblclick')
+      .subscribe(() => {
+        if (!this.selected || !this.selected.isLoaded()) return;
+        this.selected.zoomIn();
+        this.selected.drawOn(this);
+      });
+
     this._mouse$
       .subscribe(({ currPosition, lastPosition }) => {
-        if (!this.selected) return;
+        if (!this.selected || !this.selected.isLoaded()) return;
         const delta = subArrays(currPosition, lastPosition);
-        const bounds = this._getBounds(this.selected.scale);
-        const getTranslation = translateOn(bounds);
-        const position = getTranslation(this.selected.position, delta);
-        if (this.selected.isLoaded()) {
-          this.selected.setPosition(position);
-          this.drawSelected();
-        }
+        this.selected.translate(delta);
+        this.selected.drawOn(this);
       });
 
-    // eslint-disable-next-line
-    const hammer = canvas._hammer || new Hammer(canvas);
-    hammer.on('swipeleft', () => this.prev());
-    hammer.on('swiperight', () => this.next());
-    // eslint-disable-next-line
-    canvas._hammer = hammer;
-
-    fromEvent(canvas, 'keypress')
-      .subscribe((e) => {
-        if (e.which === 39) {
-          this.next();
-        }
-        else if (e.which === 37) {
-          this.prev();
-        }
+    fromEvent(canvas.ownerDocument.defaultView, 'resize')
+      .subscribe(() => {
+        this._resizeCanvasToDisplaySize();
+        this.restore();
       });
 
-    fromEvent(canvas, 'resize')
-      .subscribe(() => this.restore());
-    fromEvent(window, 'resize')
-      .subscribe(() => this.restore());
-  }
-
-  _getBounds(scale) {
-    if (!this.selected) return undefined;
-    const minX = -(this.selected.naturalWidth * scale) + this._canvas.width;
-    const minY = -(this.selected.naturalHeight * scale) + this._canvas.height;
-    const maxX = 0 * scale;
-    const maxY = 0 * scale;
-    return {
-      minX,
-      maxX,
-      minY,
-      maxY,
-    };
+    this._resizeCanvasToDisplaySize();
   }
 
   clear() {
@@ -155,55 +65,76 @@ export class Viewer {
     this._ctx.drawImage(image, x, y, w, h);
   }
 
-  drawSelected() {
-    if (this.selected && this.selected.isLoaded()) {
-      this.selected.drawOn(this);
-    }
-  }
-
   isAllLoaded() {
     return this._items[this.length - 1].isLoaded();
   }
 
-  _loadImage(index) {
-    if (index < 0 || index >= this.length) return;
-    const item = this._items[index];
-    item.load()
-      .subscribe(() => {
-        if (index === this.current) {
-          this._zoom$.next({ scale: this.selected.scale });
-          this.drawSelected();
-        }
-        this._loadImage(index + 1);
-      });
-  }
-
   addImage(src, imgW, imgH) {
     const item = new ViewerImage(src, imgW, imgH);
+    item.onLoading(this._updatePlaceholder.bind(this));
     this.items.push(item);
 
     if (this.current === null || this.isAllLoaded()) {
-      this._loadImage(this.length - 1);
       if (this.current === null) {
         this.select(0);
       }
+      this._loadImage(this.length - 1);
     }
 
     return this;
   }
 
-  /* removeImage(index) {
+  onError(fn) {
+    if (typeof fn === 'function') {
+      this._error = fn;
+    }
+  }
+
+  setErrorImage(src, position = [0, 0], [width, height] = []) {
+    this._error = new ViewerImage(src, width, height);
+    this._error.translate(position);
+
+    return this;
+  }
+
+  setPlaceholder(...args) {
+    if (typeof args[0] === 'function') {
+      const [fn, update] = args;
+      this._placeholder = fn;
+      this._isToUpdatePlaceholder = update;
+    }
+    else {
+      this.setPlaceholderImage(...args);
+    }
+  }
+
+  setPlaceholderImage(src, position = [0, 0], [width, height] = []) {
+    this._placeholder = new ViewerImage(src, width, height);
+    this._placeholder.translate(position);
+    if (this.selected && !this.selected.isLoaded()) {
+      this._drawPlaceholder();
+    }
+
+    return this;
+  }
+
+  removeByIndex(index) {
     this._items.splice(index, 1);
     return this;
-  } */
+  }
 
   select(index) {
     if (index !== this.current) {
-      const item = this._items[index];
       this._current = index;
-      item.reset();
-      this._zoom$.next({ scale: item.scale });
-      this.drawSelected();
+      if (this.selected.isLoaded()) {
+        this.restore();
+      }
+      else if (this.selected.hasError()) {
+        this._drawError();
+      }
+      else {
+        this._drawPlaceholder();
+      }
     }
     return this;
   }
@@ -224,34 +155,99 @@ export class Viewer {
     return this;
   }
 
-  /* zoomIn(delta) {
-    if (this.selected) {
+  zoomIn(delta) {
+    if (this.selected && this.selected.isLoaded()) {
       this.selected.zoomIn(delta);
+      this.selected.drawOn(this);
     }
     return this;
   }
 
   zoomOut(delta) {
-    if (this.selected) {
+    if (this.selected && this.selected.isLoaded()) {
       this.selected.zoomOut(delta);
-    }
-    return this;
-  } */
-
-  restore() {
-    if (this.selected) {
-      this.selected.reset();
-      this._zoom$.next({ scale: this.selected.scale });
-      this.drawSelected();
+      this.selected.drawOn(this);
     }
     return this;
   }
 
-  /* moveTo(x, y) {
-    if (this.selected) {
-      this.selected.moveTo(x, y);
-      this.drawSelected();
+  zoom(delta) {
+    if (this.selected && this.selected.isLoaded()) {
+      this.selected.zoom(delta);
+      this.selected.drawOn(this);
     }
     return this;
-  } */
+  }
+
+  restore() {
+    if (this.selected) {
+      if (this.selected.isLoaded()) {
+        this.selected.reset();
+        this.selected.drawOn(this);
+      }
+    }
+    return this;
+  }
+
+  moveTo(x, y) {
+    if (this.selected && this.selected.isLoaded()) {
+      this.selected.translate(x, y);
+      this.selected.drawOn(this);
+    }
+    return this;
+  }
+
+  _resizeCanvasToDisplaySize() {
+    const width = this._canvas.clientWidth;
+    const height = this._canvas.clientHeight;
+
+    if (this._canvas.width !== width || this._canvas.height !== height) {
+      this._canvas.width = width;
+      this._canvas.height = height;
+    }
+  }
+
+  _updatePlaceholder(state) {
+    if (this._isToUpdatePlaceholder && this.selected.isLoading()) {
+      this._drawPlaceholder(state);
+    }
+  }
+
+  _drawError(error) {
+    if (this._error instanceof ViewerImage) {
+      this._error.drawOn(this);
+    }
+    else if (typeof this._error === 'function') {
+      this.clear();
+      this._error(this._ctx, error);
+    }
+  }
+
+  _drawPlaceholder(...args) {
+    if (this._placeholder instanceof ViewerImage) {
+      this._placeholder.drawOn(this);
+    }
+    else if (typeof this._placeholder === 'function') {
+      this.clear();
+      this._placeholder(this._ctx, ...args);
+    }
+  }
+
+  _loadImage(index) {
+    if (index < 0 || index >= this.length) return;
+    const item = this._items[index];
+    item.load()
+      .subscribe(() => {
+        if (index === this.current) {
+          this.restore();
+        }
+        this._loadImage(index + 1);
+      })
+      .catch((e) => {
+        if (index === this.current) {
+          this._drawError(e);
+        }
+        this._loadImage(index + 1);
+      });
+  }
 }

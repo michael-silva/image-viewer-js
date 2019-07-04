@@ -1,5 +1,6 @@
-import { stepZoom, freeZoom } from './zoom-track';
+import { stepZoom, freeZoom } from './viewer-image';
 
+jest.mock('./utils/load-image');
 
 test('stepZoom should increase based on steps', () => {
   const expected1 = 1.4;

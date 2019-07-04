@@ -1,4 +1,4 @@
-import { sumArrays, subArrays } from './utils';
+import { sumArrays, subArrays } from './array-utils';
 
 test('sumArrays should sum each item of two arrays', () => {
   const a1 = [1, 2, 3, 4, 5];
