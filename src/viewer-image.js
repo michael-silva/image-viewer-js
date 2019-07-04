@@ -3,7 +3,7 @@ import { loadImage } from './utils/load-image';
 import { sumArrays } from './utils';
 
 export const stepZoom = (scale, step = 1) => {
-  const steps = [1, 1.4, 1.8, 2];
+  const steps = [1, 1.5];
   const i = steps.findIndex((s) => s === scale);
   if (i === -1) return steps[0];
   const j = i + step;
