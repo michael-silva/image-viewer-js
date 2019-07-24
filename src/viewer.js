@@ -210,15 +210,17 @@ export class Viewer {
     return this;
   }
 
-  fillWidth() {
-    if (this.selected && this.selected.isLoaded()) {
-      this.selected.setAspectRatio(this.width / this.selected.naturalWidth);
+  fillWidth(image = this.selected) {
+    if (!image || !image.isLoaded || !image.naturalWidth) return;
+    if (image.isLoaded()) {
+      image.setAspectRatio(this.width / image.naturalWidth);
     }
   }
 
-  fillHeight() {
-    if (this.selected && this.selected.isLoaded()) {
-      this.selected.setAspectRatio(this.height / this.selected.naturalHeight);
+  fillHeight(image = this.selected) {
+    if (!image || !image.isLoaded || !image.naturalHeight) return;
+    if (image.isLoaded()) {
+      image.setAspectRatio(this.height / image.naturalHeight);
     }
   }
 

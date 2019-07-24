@@ -9,6 +9,10 @@ export class ViewerImage {
 
   get position() { return this._position; }
 
+  get height() { return this.naturalHeight * this.scale; }
+
+  get width() { return this.naturalWidth * this.scale; }
+
   get naturalHeight() { return this._image.naturalHeight; }
 
   get naturalWidth() { return this._image.naturalWidth; }
@@ -93,7 +97,7 @@ export class ViewerImage {
       .subscribe(() => {
         this._loading = false;
         this._loaded = true;
-        if (this._loadedHandler) this._loadedHandler();
+        if (this._loadedHandler) this._loadedHandler(this);
       });
 
     loading$.catch((e) => {
@@ -107,11 +111,13 @@ export class ViewerImage {
   drawOn(viewer) {
     viewer.clear();
     this._repositioning(viewer);
-    const size = [
-      this.naturalWidth * this.scale,
-      this.naturalHeight * this.scale,
-    ];
-    viewer.drawImage(this._image, this.position, size);
+    if (this.height < viewer.height) {
+      this._position[1] = -((this.height - viewer.height) / 2);
+    }
+    if (this.width < viewer.width) {
+      this._position[0] = -((this.width - viewer.width) / 2);
+    }
+    viewer.drawImage(this._image, this.position, [this.width, this.height]);
   }
 
   _stepZoom(step = 1) {
