@@ -1,5 +1,5 @@
 
-export const drawCenterMessage = (viewer, fontStyle = '30px serif') => (ctx, message) => {
+const drawCenterMessage = (viewer, fontStyle = '30px serif') => (ctx, message) => {
   const x = viewer.width / 2;
   const y = viewer.height / 2 - 15;
   ctx.beginPath();
@@ -9,3 +9,5 @@ export const drawCenterMessage = (viewer, fontStyle = '30px serif') => (ctx, mes
   ctx.textAlign = 'center';
   ctx.fillText(message, x, y);
 };
+
+export default drawCenterMessage;

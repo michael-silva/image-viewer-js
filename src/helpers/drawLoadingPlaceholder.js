@@ -1,5 +1,5 @@
 
-export const drawLoadingPlaceholder = (viewer, emptyStyle = 'gray', fillStyle = 'orange') => (ctx, update) => {
+const drawLoadingPlaceholder = (viewer, emptyStyle = 'gray', fillStyle = 'orange') => (ctx, update) => {
   const x = viewer.width / 2;
   const y = viewer.height / 2;
   const radius = 50;
@@ -17,3 +17,5 @@ export const drawLoadingPlaceholder = (viewer, emptyStyle = 'gray', fillStyle = 
     ctx.stroke();
   }
 };
+
+export default drawLoadingPlaceholder;

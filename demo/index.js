@@ -32,6 +32,7 @@ keyboardAdapter(canvas, viewer);
 
 viewer.setPlaceholder(drawLoadingPlaceholder(viewer), true);
 viewer.onError(drawMessage(viewer, 'Error to load image'));
+viewer.onLoaded(() => viewer.fillWidth());
 
 viewer
   .addImage('https://picsum.photos/1200/1000.jpg?random=1', 1200, 1000)
