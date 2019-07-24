@@ -66,7 +66,7 @@ test('double tap should zoom Step just the selected image', () => {
   viewer.items[1]._image.dispatchEvent(new Event('load'));
   cmock._hammer.emit('doubletap', {});
   expect(viewer.items[0].scale).toBe(1);
-  expect(viewer.items[1].scale).toBe(1.4);
-  expect(viewer.selected.scale).toBe(1.4);
+  expect(viewer.items[1].scale).toBe(1.5);
+  expect(viewer.selected.scale).toBe(1.5);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });

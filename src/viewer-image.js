@@ -111,10 +111,10 @@ export class ViewerImage {
   drawOn(viewer) {
     viewer.clear();
     this._repositioning(viewer);
-    if (this.height < viewer.height) {
+    if (this.height && this.height < viewer.height) {
       this._position[1] = -((this.height - viewer.height) / 2);
     }
-    if (this.width < viewer.width) {
+    if (this.width && this.width < viewer.width) {
       this._position[0] = -((this.width - viewer.width) / 2);
     }
     viewer.drawImage(this._image, this.position, [this.width, this.height]);

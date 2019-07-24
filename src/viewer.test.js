@@ -1,7 +1,9 @@
 /* eslint-disable no-underscore-dangle */
 import { canvasMock, contextMock } from './utils/test-utils';
+import { ViewerImage } from './viewer-image';
 import { Viewer } from './viewer';
 
+ViewerImage.ZOOM_STEPS = [1, 1.4, 1.8, 2];
 let loadImageObservable;
 jest.mock('./utils/load-image', () => ({
   loadImage: () => {
