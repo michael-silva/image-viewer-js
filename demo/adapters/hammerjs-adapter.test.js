@@ -1,9 +1,9 @@
 /* eslint-disable no-underscore-dangle */
-import { canvasMock, contextMock } from '../utils/test-utils';
-import { Viewer } from '../viewer';
+import { canvasMock, contextMock } from '../../src/utils/test-utils';
+import { Viewer } from '../../src/viewer';
 import hammerAdapter from './hammerjs-adapter';
 
-jest.mock('../utils/load-image');
+jest.mock('../../src/utils/load-image');
 
 afterEach(() => {
   contextMock.drawImage.mockReset();
@@ -66,7 +66,7 @@ test('double tap should zoom Step just the selected image', () => {
   viewer.items[1]._image.dispatchEvent(new Event('load'));
   cmock._hammer.emit('doubletap', {});
   expect(viewer.items[0].scale).toBe(1);
-  expect(viewer.items[1].scale).toBe(1.4);
-  expect(viewer.selected.scale).toBe(1.4);
+  expect(viewer.items[1].scale).toBe(1.5);
+  expect(viewer.selected.scale).toBe(1.5);
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
 });
