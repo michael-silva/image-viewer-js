@@ -52,10 +52,6 @@ export class ViewerImage {
     return this._loading;
   }
 
-  setZoomSteps(zoomSteps) {
-    this._zoomSteps = zoomSteps;
-  }
-
   setAspectRatio(ratio) {
     this._ratio = ratio;
   }

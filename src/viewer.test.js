@@ -362,6 +362,8 @@ test('should draw a placeholder image during the load', () => {
   expect(contextMock.drawImage).toHaveBeenCalledWith(image, 0, 0, naturalWidth, naturalHeight);
   viewer.items[0]._image.dispatchEvent(new Event('load'));
   expect(contextMock.drawImage).toHaveBeenCalledTimes(2);
+  viewer.next();
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(3);
 });
 
 test('should draw a placeholder based on a funtion during the load', () => {
@@ -423,4 +425,65 @@ test('should execute an erro draw callback when and error occurr', () => {
   expect(errorFn).toHaveBeenCalledTimes(1);
   expect(errorFn).toHaveBeenCalledWith(contextMock, {});
   expect(contextMock.drawImage).toHaveBeenCalledTimes(0);
+});
+
+test('fillWidth method should update apect ratio', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  viewer.items[1]._image.dispatchEvent(new Event('load'));
+  Object.defineProperty(viewer.items[0]._image, 'naturalWidth', { get: () => 100 });
+  Object.defineProperty(viewer.items[0]._image, 'naturalHeight', { get: () => 100 });
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+  expect(viewer.items[1].aspectRatio).toEqual(1);
+  expect(viewer.selected.aspectRatio).toEqual(1);
+  viewer.fillWidth();
+  expect(viewer.items[1].aspectRatio).toEqual(1);
+  expect(viewer.selected.aspectRatio).toEqual(0.5);
+  viewer.next();
+  expect(viewer.items[0].aspectRatio).toEqual(0.5);
+  expect(viewer.selected.aspectRatio).toEqual(1);
+});
+
+test('fillHeight method should update aspect ratio just of selected', () => {
+  const cmock = canvasMock();
+  const viewer = new Viewer(cmock);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  viewer.items[1]._image.dispatchEvent(new Event('load'));
+  Object.defineProperty(viewer.items[0]._image, 'naturalWidth', { get: () => 100 });
+  Object.defineProperty(viewer.items[0]._image, 'naturalHeight', { get: () => 100 });
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+  expect(viewer.items[1].aspectRatio).toEqual(1);
+  expect(viewer.selected.aspectRatio).toEqual(1);
+  viewer.fillHeight();
+  expect(viewer.items[1].aspectRatio).toEqual(1);
+  expect(viewer.selected.aspectRatio).toEqual(0.5);
+  viewer.next();
+  expect(viewer.items[0].aspectRatio).toEqual(0.5);
+  expect(viewer.selected.aspectRatio).toEqual(1);
+});
+
+test('onLoaded method should execute after each image load', () => {
+  const cmock = canvasMock();
+  const loadedHandler = jest.fn();
+  const viewer = new Viewer(cmock);
+  viewer.onLoaded(loadedHandler);
+  const src1 = 'a1';
+  const src2 = 'a2';
+  viewer.addImage(src1);
+  viewer.addImage(src2);
+  viewer.items[0]._image.dispatchEvent(new Event('load'));
+  viewer.items[1]._image.dispatchEvent(new Event('load'));
+  Object.defineProperty(viewer.items[0]._image, 'naturalWidth', { get: () => 100 });
+  Object.defineProperty(viewer.items[0]._image, 'naturalHeight', { get: () => 100 });
+  expect(contextMock.drawImage).toHaveBeenCalledTimes(1);
+  expect(loadedHandler).toHaveBeenCalledTimes(2);
 });

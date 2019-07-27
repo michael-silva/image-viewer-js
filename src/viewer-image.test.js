@@ -4,7 +4,7 @@ import { ViewerImage } from './viewer-image';
 jest.mock('./utils/load-image');
 ViewerImage.ZOOM_STEPS = [1, 1.4, 1.8, 2];
 
-test('stepZoom should increase based on steps', () => {
+test('should increase based on steps', () => {
   const image = new ViewerImage('src', 100, 100);
   const expected1 = 1.4;
   const expected2 = 1.8;
@@ -16,7 +16,7 @@ test('stepZoom should increase based on steps', () => {
   expect(result2).toBe(expected2);
 });
 
-test('stepZoom should go back for first step after max', () => {
+test('should go back for first step after max', () => {
   const image = new ViewerImage('src', 100, 100);
   const expected1 = 2;
   const expected2 = 1;
@@ -30,7 +30,7 @@ test('stepZoom should go back for first step after max', () => {
   expect(result2).toBe(expected2);
 });
 
-test('stepZoom should go to first step if the scale is custom', () => {
+test('should go to first step if the scale is custom', () => {
   const image = new ViewerImage('src', 100, 100);
   const expected = 1;
   image._scale = 1.3;
@@ -40,7 +40,7 @@ test('stepZoom should go to first step if the scale is custom', () => {
   expect(result).toBe(expected);
 });
 
-test('freeZoom should scale for value passed', () => {
+test('should scale for value passed', () => {
   const image = new ViewerImage('src', 100, 100);
   const expected1 = 1.3;
   const expected2 = 1.7;
@@ -53,7 +53,7 @@ test('freeZoom should scale for value passed', () => {
   expect(result2).toBe(expected2);
 });
 
-test('freeZoom should not pass the scale min and max', () => {
+test('should set the zoom not pass the scale min and max', () => {
   const image = new ViewerImage('src', 100, 100);
   const expected1 = 1;
   const expected2 = 2;
@@ -63,4 +63,27 @@ test('freeZoom should not pass the scale min and max', () => {
   const result2 = image._scale;
   expect(result1).toBe(expected1);
   expect(result2).toBe(expected2);
+});
+
+test('should move the position of image', () => {
+  const image = new ViewerImage('src', 100, 100);
+  const expected1 = [0, 0];
+  const expected2 = [-2, 3];
+  const result1 = image._position;
+  image.translate([-2, 3]);
+  const result2 = image._position;
+  expect(result1).toEqual(expected1);
+  expect(result2).toEqual(expected2);
+});
+
+test('should throw an error if set null to onLoading', () => {
+  const image = new ViewerImage('src', 100, 100);
+  const result = () => image.onLoading(null);
+  expect(result).toThrow(Error);
+});
+
+test('should throw an error if set null to onLoaded', () => {
+  const image = new ViewerImage('src', 100, 100);
+  const result = () => image.onLoaded(null);
+  expect(result).toThrow(Error);
 });
