@@ -1,8 +1,8 @@
+/* eslint-disable import/no-unresolved */
 // import TouchEmulator from 'hammer-touchemulator';
-import setupViewer from '../src/index';
-import keyboardAdapter from '../src/adapters/keyboard-adapter';
-import drawMessage from '../src/helpers/drawMessage';
-import drawLoadingPlaceholder from '../src/helpers/drawLoadingPlaceholder';
+import { setupViewer } from 'image-viewer-js';
+import { keyboardAdapter } from 'image-viewer-js/adapters';
+import { drawMessage, drawLoadingPlaceholder } from 'image-viewer-js/helpers';
 
 const setupThumbs = (viewer) => {
   const fragment = document.createDocumentFragment();
