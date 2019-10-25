@@ -37,7 +37,8 @@ workflows:
           requires:
             - lint_and_test
           filters:
-            branches: master
+            branches:
+              only: master
             tags:
               only: /^v.*/
   validate:
