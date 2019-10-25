@@ -15,8 +15,25 @@ jobs:
       - run: npm install
       - run: npm run lint
       - run: npm run test:coverage
+  deploy:
+    steps:
+      - run:
+          name: Set registry URL
+          command: npm set registry https://registry.npmjs.com/
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+      - run:
+          name: Publish package
+          command: npm publish
 workflows:
   version: 2
   validate:
     jobs:
       - lint_and_test
+      - deploy:
+          requires:
+            - lint_and_test
+          filters:
+            tags:
+              only: /^v.*/
