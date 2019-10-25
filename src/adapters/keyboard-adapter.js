@@ -1,6 +1,6 @@
 import { fromEvent } from '../utils/observable';
 
-const hammerAdapter = (canvas, viewer) => {
+const keyboardAdapter = (canvas, viewer) => {
   fromEvent(canvas.ownerDocument, 'keyup')
     .subscribe((e) => {
       if (e.key === 'ArrowRight') {
@@ -12,4 +12,4 @@ const hammerAdapter = (canvas, viewer) => {
     });
 };
 
-export default hammerAdapter;
+export default keyboardAdapter;
