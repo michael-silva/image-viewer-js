@@ -29,7 +29,7 @@ workflows:
   version: 2
   publish: 
     jobs:
-      - version
+      - version:
           filters:
             branches:
               only: master
