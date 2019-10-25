@@ -12,6 +12,7 @@ jobs:
     docker:
       - image: circleci/node:latest
     steps:
+      - checkout
       - run: npm version patch
       - run: git push origin master
       - run: git push --tags
