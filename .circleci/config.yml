@@ -15,8 +15,32 @@ jobs:
       - run: npm install
       - run: npm run lint
       - run: npm run test:coverage
+  deploy:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - run:
+          name: Set registry URL
+          command: npm set registry https://registry.npmjs.com/
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+      - run:
+          name: Publish package
+          command: npm publish
 workflows:
   version: 2
+  publish: 
+    jobs:
+      - lint_and_test
+      - deploy:
+          requires:
+            - lint_and_test
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^v.*/
   validate:
     jobs:
       - lint_and_test
