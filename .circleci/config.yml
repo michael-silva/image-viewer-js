@@ -22,17 +22,14 @@ jobs:
       - checkout
       - run: npm install
       - run: npm set registry https://registry.npmjs.com/
-      - run: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+      - run: npm set _auth=$NPM_TOKEN
       - run: npm run build
       - run: npm publish
 workflows:
   version: 2
   publish: 
     jobs:
-      - lint_and_test
       - deploy:
-          requires:
-            - lint_and_test
           filters:
             branches:
               only: master
