@@ -1,7 +1,7 @@
 {
-  "name": "image-viewer-js",
-  "version": "0.0.1",
-  "description": "",
+  "name": "canvas-image-viewer",
+  "version": "0.0.2",
+  "description": "An canvas image viewer library with js",
   "main": "dist/index.js",
   "jest": {
     "coverageThreshold": {
