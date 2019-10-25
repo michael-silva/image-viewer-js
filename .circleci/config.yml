@@ -30,7 +30,7 @@ jobs:
           command: npm publish
 workflows:
   version: 2
-  validate:
+  publish: 
     jobs:
       - lint_and_test
       - deploy:
@@ -39,3 +39,6 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+  validate:
+    jobs:
+      - lint_and_test
