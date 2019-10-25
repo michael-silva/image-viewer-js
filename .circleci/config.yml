@@ -16,6 +16,8 @@ jobs:
       - run: npm run lint
       - run: npm run test:coverage
   deploy:
+    docker:
+      - image: circleci/node:latest
     steps:
       - run:
           name: Set registry URL
