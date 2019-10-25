@@ -1,8 +1,8 @@
+/* eslint-disable import/no-unresolved */
 // import TouchEmulator from 'hammer-touchemulator';
-import setupViewer from '../src/index';
-import keyboardAdapter from '../src/adapters/keyboard-adapter';
-import drawMessage from '../src/helpers/drawMessage';
-import drawLoadingPlaceholder from '../src/helpers/drawLoadingPlaceholder';
+import { setupViewer } from 'image-viewer-js';
+import { keyboardAdapter } from 'image-viewer-js/adapters';
+import { drawMessage, drawLoadingPlaceholder } from 'image-viewer-js/helpers';
 
 const setupThumbs = (viewer) => {
   const fragment = document.createDocumentFragment();
@@ -32,6 +32,7 @@ keyboardAdapter(canvas, viewer);
 
 viewer.setPlaceholder(drawLoadingPlaceholder(viewer), true);
 viewer.onError(drawMessage(viewer, 'Error to load image'));
+viewer.onLoaded((image) => viewer.fillWidth(image));
 
 viewer
   .addImage('https://picsum.photos/1200/1000.jpg?random=1', 1200, 1000)

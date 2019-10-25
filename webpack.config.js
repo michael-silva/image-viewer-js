@@ -2,18 +2,18 @@ const path = require('path');
 const babelConfig = require('./babel.config');
 
 module.exports = {
+  entry: {
+    index: './src/index.js',
+    helpers: './src/helpers/index.js',
+    adapters: './src/adapters/index.js',
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].js',
+  },
   mode: 'development',
   devtool: 'source-map',
   watch: true,
-  devServer: {
-    port: 3000,
-    contentBase: path.join(__dirname, 'demo'),
-  },
-  entry: './src/index.js',
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'index.js',
-  },
   module: {
     rules: [
       {

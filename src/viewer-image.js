@@ -2,34 +2,25 @@ import { fromEvent } from './utils/observable';
 import { loadImage } from './utils/load-image';
 import { sumArrays } from './utils';
 
-export const stepZoom = (scale, step = 1) => {
-  const steps = [1, 1.4, 1.8, 2];
-  const i = steps.findIndex((s) => s === scale);
-  if (i === -1) return steps[0];
-  const j = i + step;
-  if (j === -1) return steps[steps.length - 1];
-  if (j === steps.length) return steps[0];
-  return steps[j];
-};
-
-export const freeZoom = (scale, delta) => {
-  const minScale = 1;
-  const maxScale = 2;
-  return Math.min(maxScale, Math.max(minScale, scale + delta));
-};
-
 export class ViewerImage {
   get image() { return this._image; }
 
-  get scale() { return this._scale; }
+  get scale() { return this._scale * this.aspectRatio; }
 
   get position() { return this._position; }
+
+  get height() { return this.naturalHeight * this.scale; }
+
+  get width() { return this.naturalWidth * this.scale; }
 
   get naturalHeight() { return this._image.naturalHeight; }
 
   get naturalWidth() { return this._image.naturalWidth; }
 
+  get aspectRatio() { return this._ratio; }
+
   constructor(src, width, height) {
+    this._ratio = 1;
     this._src = src;
     this._image = new Image(width, height);
     this.reset();
@@ -40,6 +31,13 @@ export class ViewerImage {
       throw new Error('The onLoading parameter needs to be a function');
     }
     this._loadingHandler = callback;
+  }
+
+  onLoaded(callback) {
+    if (typeof callback !== 'function') {
+      throw new Error('The onLoaded parameter needs to be a function');
+    }
+    this._loadedHandler = callback;
   }
 
   hasError() {
@@ -54,23 +52,26 @@ export class ViewerImage {
     return this._loading;
   }
 
+  setAspectRatio(ratio) {
+    this._ratio = ratio;
+  }
+
   reset() {
     this._position = [0, 0];
     this._scale = 1;
   }
 
   zoomIn() {
-    const step = 1;
-    this._scale = stepZoom(this.scale, step);
+    this._scale = this._stepZoom(1);
   }
 
   zoomOut() {
-    const step = -1;
-    this._scale = stepZoom(this.scale, step);
+    this._scale = this._stepZoom(-1);
   }
 
   zoom(delta) {
-    this._scale = freeZoom(this.scale, delta);
+    const { MAX_SCALE, MIN_SCALE } = ViewerImage;
+    this._scale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, this._scale + delta));
   }
 
   translate(delta) {
@@ -92,6 +93,7 @@ export class ViewerImage {
       .subscribe(() => {
         this._loading = false;
         this._loaded = true;
+        if (this._loadedHandler) this._loadedHandler(this);
       });
 
     loading$.catch((e) => {
@@ -105,11 +107,23 @@ export class ViewerImage {
   drawOn(viewer) {
     viewer.clear();
     this._repositioning(viewer);
-    const size = [
-      this.naturalWidth * this.scale,
-      this.naturalHeight * this.scale,
-    ];
-    viewer.drawImage(this._image, this.position, size);
+    if (this.height && this.height < viewer.height) {
+      this._position[1] = -((this.height - viewer.height) / 2);
+    }
+    if (this.width && this.width < viewer.width) {
+      this._position[0] = -((this.width - viewer.width) / 2);
+    }
+    viewer.drawImage(this._image, this.position, [this.width, this.height]);
+  }
+
+  _stepZoom(step = 1) {
+    const steps = ViewerImage.ZOOM_STEPS;
+    const i = steps.findIndex((s) => s === this._scale);
+    if (i === -1) return steps[0];
+    const j = i + step;
+    if (j === -1) return steps[steps.length - 1];
+    if (j === steps.length) return steps[0];
+    return steps[j];
   }
 
   _repositioning(viewer) {
@@ -137,3 +151,7 @@ export class ViewerImage {
     };
   }
 }
+
+ViewerImage.MAX_SCALE = 2;
+ViewerImage.MIN_SCALE = 1;
+ViewerImage.ZOOM_STEPS = [1, 1.5];

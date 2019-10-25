@@ -72,6 +72,7 @@ export class Viewer {
   addImage(src, imgW, imgH) {
     const item = new ViewerImage(src, imgW, imgH);
     item.onLoading(this._updatePlaceholder.bind(this));
+    if (this._loadedHandler) item.onLoaded(this._loadedHandler);
     this.items.push(item);
 
     if (this.current === null || this.isAllLoaded()) {
@@ -87,6 +88,12 @@ export class Viewer {
   onError(fn) {
     if (typeof fn === 'function') {
       this._error = fn;
+    }
+  }
+
+  onLoaded(fn) {
+    if (typeof fn === 'function') {
+      this._loadedHandler = fn;
     }
   }
 
@@ -116,6 +123,11 @@ export class Viewer {
     }
 
     return this;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  defineZoomSteps(zoomSteps) {
+    ViewerImage.ZOOM_STEPS = zoomSteps;
   }
 
   removeByIndex(index) {
@@ -155,17 +167,17 @@ export class Viewer {
     return this;
   }
 
-  zoomIn(delta) {
+  zoomIn() {
     if (this.selected && this.selected.isLoaded()) {
-      this.selected.zoomIn(delta);
+      this.selected.zoomIn();
       this.selected.drawOn(this);
     }
     return this;
   }
 
-  zoomOut(delta) {
+  zoomOut() {
     if (this.selected && this.selected.isLoaded()) {
-      this.selected.zoomOut(delta);
+      this.selected.zoomOut();
       this.selected.drawOn(this);
     }
     return this;
@@ -183,6 +195,7 @@ export class Viewer {
     if (this.selected) {
       if (this.selected.isLoaded()) {
         this.selected.reset();
+        this.selected.zoom(0);
         this.selected.drawOn(this);
       }
     }
@@ -195,6 +208,20 @@ export class Viewer {
       this.selected.drawOn(this);
     }
     return this;
+  }
+
+  fillWidth(image = this.selected) {
+    if (!image || !image.isLoaded || !image.naturalWidth) return;
+    if (image.isLoaded()) {
+      image.setAspectRatio(this.width / image.naturalWidth);
+    }
+  }
+
+  fillHeight(image = this.selected) {
+    if (!image || !image.isLoaded || !image.naturalHeight) return;
+    if (image.isLoaded()) {
+      image.setAspectRatio(this.height / image.naturalHeight);
+    }
   }
 
   _resizeCanvasToDisplaySize() {
