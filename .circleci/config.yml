@@ -1,12 +1,5 @@
 version: 2.1
 jobs:
-  build:
-    docker:
-      - image: circleci/node:latest
-    steps:
-      - checkout
-      - run: npm install
-      - run: npm run build
   lint_and_test:
     docker:
       - image: circleci/node:latest
@@ -15,26 +8,37 @@ jobs:
       - run: npm install
       - run: npm run lint
       - run: npm run test:coverage
-  deploy:
+  version:
+    docker:
+      - image: circleci/node:latest
+    steps:
+      - run: npm version patch
+      - run: git push origin master
+      - run: git push --tags
+  npm:
     docker:
       - image: circleci/node:latest
     steps:
       - checkout
       - run: npm install
+      - run: npm run build
       - run: npm set registry https://registry.npmjs.com/
       - run: npm set _auth=$NPM_TOKEN
-      - run: npm run build
       - run: npm publish
 workflows:
   version: 2
   publish: 
     jobs:
-      - deploy:
+      - version:
           filters:
             branches:
               only: master
-            tags:
-              only: /^v.*/
+      - npm:
+          requires:
+            - version
+          filters:
+            branches:
+              only: master
   validate:
     jobs:
       - lint_and_test
