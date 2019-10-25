@@ -19,7 +19,7 @@
     "lint": "./node_modules/.bin/eslint src",
     "lint:fix": "npm run lint -- --fix",
     "test": "./node_modules/.bin/jest --watch",
-    "test:coverage": "./node_modules/.bin/jest --coverage",
+    "test:coverage": "./node_modules/.bin/jest --coverage"
   },
   "keywords": [],
   "author": "Michael Silva",
