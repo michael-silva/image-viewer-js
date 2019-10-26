@@ -13,6 +13,8 @@ jobs:
       - image: circleci/node:latest
     steps:
       - checkout
+      - run: git config user.email "michaelpereiradasilva@hotmail.com"
+      - run: git config user.name "Michael Silva"
       - run: npm version patch
       - run: git push origin master
       - run: git push --tags
