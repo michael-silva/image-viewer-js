@@ -1,6 +1,6 @@
 {
   "name": "canvas-image-viewer",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "An canvas image viewer library with js",
   "main": "dist/index.js",
   "jest": {
