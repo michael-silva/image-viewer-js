@@ -8,7 +8,7 @@ jobs:
       - run: npm install
       - run: npm run lint
       - run: npm run test:coverage
-  tagversion:
+  npm:
     docker:
       - image: circleci/node:latest
     steps:
@@ -20,11 +20,6 @@ jobs:
       - run: git config user.name "Michael Silva"
       - run: npm version patch
       - run: git push --tags
-  npm:
-    docker:
-      - image: circleci/node:latest
-    steps:
-      - checkout
       - run: npm install
       - run: npm run build
       - run: npm set registry https://registry.npmjs.com/
@@ -34,13 +29,7 @@ workflows:
   version: 2
   publish: 
     jobs:
-      - tagversion:
-          filters:
-            branches:
-              only: master
       - npm:
-          requires:
-            - tagversion
           filters:
             branches:
               only: master
