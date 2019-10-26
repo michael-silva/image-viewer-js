@@ -13,9 +13,6 @@ jobs:
       - image: circleci/node:latest
     steps:
       - checkout
-      - add_ssh_keys:
-        fingerprints:
-          - "3d:c9:43:7e:38:7d:51:78:32:a7:3e:fc:29:67:bc:eb"
       - run: git config user.email "michaelpereiradasilva@hotmail.com"
       - run: git config user.name "Michael Silva"
       - run: npm version patch
@@ -35,6 +32,9 @@ workflows:
   version: 2
   publish: 
     jobs:
+      - add_ssh_keys:
+        fingerprints:
+          - "3d:c9:43:7e:38:7d:51:78:32:a7:3e:fc:29:67:bc:eb"
       - version:
           filters:
             branches:
