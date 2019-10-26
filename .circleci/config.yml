@@ -12,6 +12,9 @@ jobs:
     docker:
       - image: circleci/node:latest
     steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "ea:f4:cf:02:65:33:cd:86:01:3f:67:dc:9a:1d:e8:7c"
       - checkout
       - run: git config user.email "michaelpereiradasilva@hotmail.com"
       - run: git config user.name "Michael Silva"
