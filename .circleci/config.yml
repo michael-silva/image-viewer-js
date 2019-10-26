@@ -34,7 +34,7 @@ workflows:
     jobs:
       - add_ssh_keys:
         fingerprints:
-          - "3d:c9:43:7e:38:7d:51:78:32:a7:3e:fc:29:67:bc:eb"
+          - "ea:f4:cf:02:65:33:cd:86:01:3f:67:dc:9a:1d:e8:7c"
       - version:
           filters:
             branches:
