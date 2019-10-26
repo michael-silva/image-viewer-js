@@ -36,9 +36,6 @@ workflows:
   publish: 
     jobs:
       - tagversion:
-          filters:
-            branches:
-              only: master
       - npm:
           requires:
             - tagversion
